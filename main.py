@@ -1,4 +1,5 @@
 import logging
+from time import sleep
 
 import serial
 from construct import Struct, Byte, Const, Checksum, ChecksumError, Enum, Bytes, Int8sb, Int16sb, Computed
@@ -77,6 +78,19 @@ request_continuous_ranging = Struct(
 request_stop_ranging = Struct(
     'header' / Const(b'\xee\x16'),
     'cmd' / Const(b'\x02\x03\x04\x08'),
+)
+
+
+ranging_cmd = Enum(
+    Bytes(4),
+    single=b'\x02\x03\x02\x05',
+    continuous=b'\x02\x03\x04\x07',
+    stop=b'\x02\x03\x04\x08',
+)
+
+ranging = Struct(
+    'header' / Const(b'\xee\x16'),
+    'cmd' / ranging_cmd
 )
 
 
@@ -223,18 +237,15 @@ def read_stm_resp(index):
         logging.error(exc)
 
 
-def read_anything(index):
-    intf = serial.Serial()
-    intf.baudrate = 115200
-    intf.port = f'COM{index}'
+def read_anything(intf):
     logging.info(f"Trying to connect port {intf.port}")
     try:
-        intf.open()
         if intf.is_open:
             logging.info(f" {intf.port} opened")
             while True:
                 data = intf.read(1)
                 logging.info(f" {intf.port} {data}")
+                sleep(0.25)
 
     except Exception as exc:
         intf.close()
