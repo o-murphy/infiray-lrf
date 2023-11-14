@@ -4,7 +4,7 @@ import serial
 from construct import Struct, Byte, Const, Checksum, ChecksumError, Enum, Bytes, Int8sb, Int16sb, Computed
 from serial.tools.list_ports import comports
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s;%(levelname)s;%(message)s")
 # test_data = b'\xee\x16\x06\x03\x02\x00\x00\x0c\x04\x15'
 # print(recieve.parse(test_data))
 
@@ -68,11 +68,11 @@ def read_valid(index):
                     counter += 1
                     try:
                         print(response.parse(data))
-                        print(counter, "Valid: ", data)
+                        logging.info(f'{counter}, Valid: {data}')
                     except ChecksumError:
-                        print(counter, "CRC ERR: ", data)
+                        logging.info(f'{counter}, CRC ERR: {data}')
                 else:
-                    print("Trash: ", data)
+                    logging.info(f'Trash: {data}')
 
     except Exception as exc:
         intf.close()

@@ -1,7 +1,9 @@
 import logging
 import serial
 from serial.tools.list_ports import comports
-from construct import *
+
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s;%(levelname)s;%(message)s")
 
 
 def read(index):
@@ -19,7 +21,7 @@ def read(index):
                 data = intf.read(1)
                 if data == b'\n':
                     counter += 1
-                    print(counter, buf)
+                    logging.info(f"{counter}, {buf}")
                     buf = b''
                 else:
                     buf += data
