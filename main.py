@@ -75,10 +75,11 @@ def read_valid(index):
 
     except Exception as exc:
         intf.close()
-        logging.exception(exc)
+        logging.error(exc)
 
 
 if __name__ == '__main__':
-    print("Available ports:\n" + ', '.join([p.name for p in comports()]) + '\n')
-    port_index = input("Port number: ")
-    read_valid(port_index)
+    while True:
+        print("Available ports:\n" + ', '.join([p.name for p in comports()]) + '\n')
+        port_index = input("Port number: ")
+        read_valid(port_index)
