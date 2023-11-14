@@ -108,8 +108,7 @@ def parse_lrf_resp(counter, data):
         elif resp.command == 0x4:
             logging.info(f' LRF resp {counter}, CONT: {resp.range}m')
         else:
-            logging.info(f' LRF resp {counter}, Valid: {int(resp.command)}: {resp.range}m')
-        # print(resp)
+            logging.info(f' LRF resp {counter}, {int(resp.command)}: {resp.range}m')
     except ChecksumError:
         logging.info(f' LRF {counter}, CRC ERR: {data}')
 
