@@ -5,9 +5,18 @@ from construct import Struct, Byte, Const, Checksum, ChecksumError, Enum, Bytes,
 from serial.tools.list_ports import comports
 from threading import Thread
 
-from filter import read
+formatter = logging.Formatter(
+    "%(asctime)s;%(levelname)s;%(message)s",
+    datefmt="%H:%M:%S"
+)
+chanel = logging.StreamHandler()
+chanel.setFormatter(formatter)
+logger = logging.getLogger("root")
+logger.setLevel(logging.INFO)
+logger.addHandler(chanel)
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s;%(levelname)s;%(message)s")
+# logging.basicConfig(level=logging.INFO, format="%(asctime)s;%(levelname)s;%(message)s")
+
 # test_data = b'\xee\x16\x06\x03\x02\x00\x00\x0c\x04\x15'
 # print(recieve.parse(test_data))
 
@@ -36,8 +45,8 @@ command = Enum(
     McuVer=0xa7,  # "Query MCU software version number",
     HWVer=0xa8,  # "Query hardware version number",
     SN=0xa9,  # "Query Sn number",
-    Counter=0x90,  # "Total times of light output ",
-    PowerLight=0x91,  # "Query the power on and light out times this time"
+    Counter=0x90,  # "Total times of light respput ",
+    PowerLight=0x91,  # "Query the power on and light resp times this time"
 )
 
 
@@ -54,22 +63,47 @@ response = Struct(
 )
 
 
+request_single = Struct(
+    'header' / Const(b'\xee\x16'),
+    'length' / Byte,
+    'cmd0' / Const(0x02, Byte),
+    'cmd1' / Const(0x03, Byte),
+    'cmd2' / Const(0x02, Byte),
+    'cmd3' / Const(0x05, Byte),
+)
+
+
+request_continuous = Struct(
+    'header' / Const(b'\xee\x16'),
+    'length' / Byte,
+    'cmd0' / Const(0x02, Byte),
+    'cmd1' / Const(0x03, Byte),
+    'cmd2' / Const(0x04, Byte),
+    'cmd3' / Const(0x07, Byte),
+)
+
+
+stm_to_lrf_request = Struct(
+
+)
+
+
 def parse_lrf_resp(counter, data):
     try:
 
         resp = response.parse(data)
         if resp.command == 0x2:
-            logging.info(f' LRF out {counter}, SING: {resp.range}m')
+            logging.info(f' LRF resp {counter}, SING: {resp.range}m')
         elif resp.command == 0x4:
-            logging.info(f' LRF out {counter}, CONT: {resp.range}m')
+            logging.info(f' LRF resp {counter}, CONT: {resp.range}m')
         else:
-            logging.info(f' LRF out {counter}, Valid: {int(resp.command)}: {resp.range}m')
-
+            logging.info(f' LRF resp {counter}, Valid: {int(resp.command)}: {resp.range}m')
+        print(resp)
     except ChecksumError:
         logging.info(f' LRF {counter}, CRC ERR: {data}')
 
 
-def read_valid(index):
+def read_lrf_resp(index):
     intf = serial.Serial()
     intf.baudrate = 115200
     intf.port = f'COM{index}'
@@ -77,7 +111,7 @@ def read_valid(index):
     try:
         intf.open()
         if intf.is_open:
-            logging.info(f" LRF {intf.port} opened")
+            logging.info(f" LRF resp {intf.port} opened")
             counter = 0
             while True:
                 data = intf.read(1)
@@ -86,7 +120,65 @@ def read_valid(index):
                     counter += 1
                     parse_lrf_resp(counter, data)
                 else:
-                    logging.info(f' LRF out Trash: {data}')
+                    logging.info(f' LRF resp Trash: {data}')
+
+    except Exception as exc:
+        intf.close()
+        logging.error(exc)
+        
+        
+def read_lrf_req(index):
+    intf = serial.Serial()
+    intf.baudrate = 115200
+    intf.port = f'COM{index}'
+    logging.info(f"Trying to connect port {intf.port}")
+    try:
+        intf.open()
+        if intf.is_open:
+            logging.info(f" LRF req {intf.port} opened")
+            counter = 0
+            while True:
+                data = intf.read(1)
+                if data == b'\xee':
+                    data += intf.read(5)
+                    counter += 1
+                    try:
+                        req = request_single.parse(data)
+                        logging.info(f' LRF req {counter}, SING')
+                    except Exception:
+                        try:
+                            req = request_continuous.parse(data)
+                            logging.info(f' LRF req {counter}, CONT')
+                        except Exception:
+                            logging.info(f' LRF req {counter}, {data}')
+                        
+                else:
+                    logging.info(f' LRF req Trash: {data}')
+
+    except Exception as exc:
+        intf.close()
+        logging.error(exc)
+
+
+def read_stm_resp(index):
+    intf = serial.Serial()
+    intf.baudrate = 115200
+    intf.port = f'COM{index}'
+    logging.info(f"Trying to connect port {intf.port}")
+    counter = 0
+    try:
+        buf = b''
+        intf.open()
+        if intf.is_open:
+            logging.info(f" STM resp {intf.port} opened")
+            while True:
+                data = intf.read(1)
+                if data == b'\n':
+                    counter += 1
+                    logging.info(f" STM resp {counter}, {buf}")
+                    buf = b''
+                else:
+                    buf += data
 
     except Exception as exc:
         intf.close()
@@ -116,17 +208,17 @@ def main():
 
     threads = []
 
-    # lrf out
-    if int(port_index := input("LRF out port number: ")) > 0:
-        threads.append(Thread(target=lambda idx=port_index: read_valid(idx)))
+    # lrf resp
+    if int(port_index := input("LRF resp port number: ")) > 0:
+        threads.append(Thread(target=lambda idx=port_index: read_lrf_resp(idx)))
 
     # lrf in
     if int(port_index := input("LRF in port number: ")) > 0:
-        threads.append(Thread(target=lambda idx=port_index: read_anything(idx)))
+        threads.append(Thread(target=lambda idx=port_index: read_lrf_req(idx)))
 
-    # stm out
-    if int(port_index := input("Stm out port number: ")) > 0:
-        threads.append(Thread(target=lambda idx=port_index: read(idx)))
+    # stm resp
+    if int(port_index := input("Stm resp port number: ")) > 0:
+        threads.append(Thread(target=lambda idx=port_index: read_stm_resp(idx)))
 
     # stm in
     if int(port_index := input("Stm in port number: ")) > 0:

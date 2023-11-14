@@ -6,7 +6,7 @@ from serial.tools.list_ports import comports
 logging.basicConfig(level=logging.INFO, format="%(asctime)s;%(levelname)s;%(message)s")
 
 
-def read(index):
+def read_stm_resp(index):
     intf = serial.Serial()
     intf.baudrate = 115200
     intf.port = f'COM{index}'
@@ -35,4 +35,4 @@ if __name__ == '__main__':
     while True:
         print("Available ports:\n" + ', '.join([p.name for p in comports()]) + '\n')
         port_index = input("Port number: ")
-        read(port_index)
+        read_stm_resp(port_index)
