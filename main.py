@@ -63,23 +63,20 @@ response = Struct(
 )
 
 
-request_single = Struct(
+request_single_ranging = Struct(
     'header' / Const(b'\xee\x16'),
-    'length' / Byte,
-    'cmd0' / Const(0x02, Byte),
-    'cmd1' / Const(0x03, Byte),
-    'cmd2' / Const(0x02, Byte),
-    'cmd3' / Const(0x05, Byte),
+    'cmd' / Const(b'\x02\x03\x02\x05'),
 )
 
 
-request_continuous = Struct(
+request_continuous_ranging = Struct(
     'header' / Const(b'\xee\x16'),
-    'length' / Byte,
-    'cmd0' / Const(0x02, Byte),
-    'cmd1' / Const(0x03, Byte),
-    'cmd2' / Const(0x04, Byte),
-    'cmd3' / Const(0x07, Byte),
+    'cmd' / Const(b'\x02\x03\x04\x07'),
+)
+
+request_stop_ranging = Struct(
+    'header' / Const(b'\xee\x16'),
+    'cmd' / Const(b'\x02\x03\x04\x08'),
 )
 
 
@@ -98,7 +95,7 @@ def parse_lrf_resp(counter, data):
             logging.info(f' LRF resp {counter}, CONT: {resp.range}m')
         else:
             logging.info(f' LRF resp {counter}, Valid: {int(resp.command)}: {resp.range}m')
-        print(resp)
+        # print(resp)
     except ChecksumError:
         logging.info(f' LRF {counter}, CRC ERR: {data}')
 
@@ -143,17 +140,58 @@ def read_lrf_req(index):
                     data += intf.read(5)
                     counter += 1
                     try:
-                        req = request_single.parse(data)
+                        req = request_single_ranging.parse(data)
                         logging.info(f' LRF req {counter}, SING')
                     except Exception:
                         try:
-                            req = request_continuous.parse(data)
+                            req = request_continuous_ranging.parse(data)
                             logging.info(f' LRF req {counter}, CONT')
                         except Exception:
-                            logging.info(f' LRF req {counter}, {data}')
+                            try:
+                                req = request_stop_ranging.parse(data)
+                                logging.info(f' LRF req {counter}, STOP')
+                            except Exception:
+                                logging.info(f' LRF req {counter}, {data}')
                         
                 else:
                     logging.info(f' LRF req Trash: {data}')
+
+    except Exception as exc:
+        intf.close()
+        logging.error(exc)
+
+
+def read_stm_req(index):
+    intf = serial.Serial()
+    intf.baudrate = 115200
+    intf.port = f'COM{index}'
+    logging.info(f"Trying to connect port {intf.port}")
+    try:
+        intf.open()
+        if intf.is_open:
+            logging.info(f" STM req {intf.port} opened")
+            counter = 0
+            while True:
+                data = intf.read(1)
+                if data == b'\xee':
+                    data += intf.read(5)
+                    counter += 1
+                    try:
+                        req = request_single_ranging.parse(data)
+                        logging.info(f' STM req {counter}, SING')
+                    except Exception:
+                        try:
+                            req = request_continuous_ranging.parse(data)
+                            logging.info(f' STM req {counter}, CONT')
+                        except Exception:
+                            try:
+                                req = request_stop_ranging.parse(data)
+                                logging.info(f' STM req {counter}, STOP')
+                            except Exception:
+                                logging.info(f' STM req {counter}, {data}')
+
+                else:
+                    logging.info(f' STM req Trash: {data}')
 
     except Exception as exc:
         intf.close()
@@ -208,24 +246,31 @@ def main():
 
     threads = []
 
+    # lrf in
+    if int(port_index := input("LRF req port number: ")) > 0:
+        threads.append(Thread(target=lambda idx=port_index: read_lrf_req(idx)))
+
+    # stm in
+    if int(port_index := input("Stm req port number: ")) > 0:
+        threads.append(Thread(target=lambda idx=port_index: read_stm_req(idx)))
+
     # lrf resp
     if int(port_index := input("LRF resp port number: ")) > 0:
         threads.append(Thread(target=lambda idx=port_index: read_lrf_resp(idx)))
-
-    # lrf in
-    if int(port_index := input("LRF in port number: ")) > 0:
-        threads.append(Thread(target=lambda idx=port_index: read_lrf_req(idx)))
 
     # stm resp
     if int(port_index := input("Stm resp port number: ")) > 0:
         threads.append(Thread(target=lambda idx=port_index: read_stm_resp(idx)))
 
-    # stm in
-    if int(port_index := input("Stm in port number: ")) > 0:
-        threads.append(Thread(target=lambda idx=port_index: read_anything(idx)))
-
     for t in threads:
         t.start()
+
+
+"""
+26 - lrf req
+40 - lrf resp
+
+"""
 
 
 if __name__ == '__main__':
