@@ -8,4 +8,10 @@ pip install -r requirements.txt
 ```
 
 ## Usage
+```shell
+# for scanning lrf
 python3 -m main
+
+# for scanning stm
+python3 -m filter
+```
