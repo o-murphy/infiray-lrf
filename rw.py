@@ -56,6 +56,11 @@ def write_serial(intf):
 
                 if message == 'b':
                     cmd = ranging.build({'cmd': ranging_cmd.stop})
+
+                if message.startswith('f'):
+                    val = int(message.split()[1])
+                    cmd = set_frequency.build({'freq': val})
+
                 if cmd:
                     intf.write(cmd)
                     logging.info(f' REQ: {cmd}')

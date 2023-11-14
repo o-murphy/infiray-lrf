@@ -23,6 +23,13 @@ logger.addHandler(chanel)
 
 
 def crc(ctx):
+    if ctx._building:
+        data = ctx._io.getvalue()
+        return sum(data[3:]) & 0xFF
+    #     ctx.pop('crc')
+    #     data = Struct(*ctx._subcons).build(ctx)
+    #     print(data)
+
     if ctx._parsing:
         data = ctx._io.getvalue()
         return sum(data[3:-1]) & 0xFF
@@ -51,8 +58,11 @@ command = Enum(
 )
 
 
+HEADER = Const(b'\xee\x16')
+
+
 response = Struct(
-    'header' / Const(b'\xee\x16'),
+    HEADER,
     'length' / Byte,
     'equip' / Const(0x3, Byte),
     'command' / command,
@@ -64,38 +74,28 @@ response = Struct(
 )
 
 
-request_single_ranging = Struct(
-    'header' / Const(b'\xee\x16'),
-    'cmd' / Const(b'\x02\x03\x02\x05'),
-)
-
-
-request_continuous_ranging = Struct(
-    'header' / Const(b'\xee\x16'),
-    'cmd' / Const(b'\x02\x03\x04\x07'),
-)
-
-request_stop_ranging = Struct(
-    'header' / Const(b'\xee\x16'),
-    'cmd' / Const(b'\x02\x03\x04\x08'),
-)
-
-
 ranging_cmd = Enum(
     Bytes(4),
     single=b'\x02\x03\x02\x05',
     continuous=b'\x02\x03\x04\x07',
-    stop=b'\x02\x03\x04\x08',
+    stop=b'\x02\x03\x05\x08',
 )
 
-ranging = Struct(
-    'header' / Const(b'\xee\x16'),
-    'cmd' / ranging_cmd
+ranging = Struct(HEADER, cmd=ranging_cmd)
+
+
+set_frequency = Struct(
+    HEADER,
+    length=Const(0x04, Byte),
+    cmd=Const(b'\x03\xa1'),
+    freq=Byte,  # 0x01~0x0A (1-10)
+    num=Const(0x00, Byte),  # reserve
+    crc=Checksum(Byte, crc, lambda ctx: ctx)
 )
 
-
-stm_to_lrf_request = Struct(
-
+frequency = Struct(
+    HEADER,
+    ret=Const(b'\x02\x03\xa1\xa4', Bytes(4))
 )
 
 
@@ -111,6 +111,8 @@ def parse_lrf_resp(counter, data):
             logging.info(f' LRF resp {counter}, {int(resp.command)}: {resp.range}m')
     except ChecksumError:
         logging.info(f' LRF {counter}, CRC ERR: {data}')
+    except Exception as exc:
+        logging.error(exc)
 
 
 def read_lrf_resp(index):
@@ -153,19 +155,11 @@ def read_lrf_req(index):
                     data += intf.read(5)
                     counter += 1
                     try:
-                        req = request_single_ranging.parse(data)
-                        logging.info(f' LRF req {counter}, SING')
+                        req = ranging.parse(data)
+                        logging.info(f' LRF req {counter}, {req.cmd}')
                     except Exception:
-                        try:
-                            req = request_continuous_ranging.parse(data)
-                            logging.info(f' LRF req {counter}, CONT')
-                        except Exception:
-                            try:
-                                req = request_stop_ranging.parse(data)
-                                logging.info(f' LRF req {counter}, STOP')
-                            except Exception:
-                                logging.info(f' LRF req {counter}, {data}')
-                        
+                        logging.info(f' LRF req {counter}, {data}')
+
                 else:
                     logging.info(f' LRF req Trash: {data}')
 
@@ -190,18 +184,10 @@ def read_stm_req(index):
                     data += intf.read(5)
                     counter += 1
                     try:
-                        req = request_single_ranging.parse(data)
-                        logging.info(f' STM req {counter}, SING')
+                        req = ranging.parse(data)
+                        logging.info(f' LRF req {counter}, {req.cmd}')
                     except Exception:
-                        try:
-                            req = request_continuous_ranging.parse(data)
-                            logging.info(f' STM req {counter}, CONT')
-                        except Exception:
-                            try:
-                                req = request_stop_ranging.parse(data)
-                                logging.info(f' STM req {counter}, STOP')
-                            except Exception:
-                                logging.info(f' STM req {counter}, {data}')
+                        logging.info(f' LRF req {counter}, {data}')
 
                 else:
                     logging.info(f' STM req Trash: {data}')
