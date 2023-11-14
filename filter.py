@@ -16,12 +16,12 @@ def read(index):
         buf = b''
         intf.open()
         if intf.is_open:
-            logging.info(f"{intf.port} opened")
+            logging.info(f" STM out {intf.port} opened")
             while True:
                 data = intf.read(1)
                 if data == b'\n':
                     counter += 1
-                    logging.info(f"{counter}, {buf}")
+                    logging.info(f" STM {counter}, {buf}")
                     buf = b''
                 else:
                     buf += data
