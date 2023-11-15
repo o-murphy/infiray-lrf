@@ -1,5 +1,5 @@
 from construct import Struct, Byte, Const, Checksum, BitStruct, Bit, Enum, Bytes, Int8sb, Int16sb, Computed, Default, \
-    Rebuild, len_, Tell
+    Rebuild, len_, Tell, Padding
 from construct import Switch, this, Pointer
 
 
@@ -138,11 +138,7 @@ frequency = Struct(
     crc=Checksum(Byte, crc, lambda ctx: ctx)
 )
 
-
-_self_inspect = Struct(
-    status3=Byte,  # reserved
-    status2=Byte,
-    status1=BitStruct(
+_self_status = BitStruct(
         fpga_status=Enum(Bit,
                          normal=1,
                          exception=0),
@@ -164,13 +160,40 @@ _self_inspect = Struct(
         temperature=Enum(Bit,
                          normal=1,
                          exception=0),
-    ),
+    )
+
+_self_inspect = Struct(
+    status3=Byte,  # reserved
+    status2=Byte,
+    status1=_self_status,
     status0=BitStruct(
         v5_power=Enum(Bit,
                       normal=1,
                       exception=0),
         reserve=Bit[7]
     ),
+)
+
+
+_ranging_response = Struct(
+    status=Byte,  # FIXME: make it as Enum
+    _range=Int16sb,
+    _dec=Int8sb,
+    range=Computed(lambda ctx: ctx._range + ctx._dec / 10),
+)
+
+
+_ranging_anomaly = Struct(
+    Bytes(3),
+    status1=_self_status
+)
+
+
+_set_first_last = Enum(
+    Byte,
+    first=0x01,
+    last=0x02,
+    multiple=0x03,
 )
 
 _set_freq = Struct(
@@ -184,7 +207,7 @@ def _crc(ctx):
     return sum(data[3:-1]) & 0xFF
 
 
-command_struct = Struct(
+command_request_struct = Struct(
     HEADER,
     length=Default(Byte, 0x00),
     equip=Const(0x03, Byte),
@@ -192,6 +215,31 @@ command_struct = Struct(
     params=Switch(
         this.cmd, {
             command.SelfInspection: _self_inspect,
+            command.SetFirstLast: _set_first_last,
+            command.SetFrequency: _set_freq,
+        },
+        default=Const(b'')
+    ),
+    _size=Tell,
+    _length_p=Pointer(HEADER.sizeof(), Rebuild(Byte, this._size - 3)),
+    crc=Rebuild(Checksum(Byte, _crc, lambda ctx: ctx), 0)
+)
+
+
+command_response_struct = Struct(
+    HEADER,
+    length=Default(Byte, 0x00),
+    equip=Const(0x03, Byte),
+    cmd=command,
+    params=Switch(
+        this.cmd, {
+            command.SelfInspection: _self_inspect,
+            command.SetFirstLast: _set_first_last,
+
+            command.SingleRanging: _ranging_response,
+            command.ContinuousRanging: _ranging_response,
+            command.StopRanging: _ranging_response,
+            command.RangingAbnormal: _ranging_anomaly,
 
             command.SetFrequency: _set_freq,
         },
@@ -199,9 +247,9 @@ command_struct = Struct(
     ),
     _size=Tell,
     _length_p=Pointer(HEADER.sizeof(), Rebuild(Byte, this._size - 3)),
-    # crc=Rebuild(Checksum(Byte, _crc, lambda ctx: ctx), 0)
+    crc=Rebuild(Checksum(Byte, _crc, lambda ctx: ctx), 0)
 )
 
 
-# command_struct.build({'cmd': command.SingleRanging, 'params': None})
-# command_struct.build({'cmd': command.SetFrequency, 'params': {'freq': 1}})
+# command_request_struct.build({'cmd': command.SingleRanging, 'params': None})
+# command_request_struct.build({'cmd': command.SetFrequency, 'params': {'freq': 1}})
