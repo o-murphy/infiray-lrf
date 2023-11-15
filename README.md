@@ -9,9 +9,9 @@ pip install -r requirements.txt
 
 ## Usage
 ```shell
-# for scanning lrf
-python3 -m main
+# for sniffing lrf
+python3 -m sniffer
 
-# for scanning stm
-python3 -m filter
+# for sending commands
+python3 -m sender
 ```

@@ -2,7 +2,8 @@ import logging
 from time import sleep
 
 import serial
-from construct import Struct, Byte, Const, Checksum, ChecksumError, Enum, Bytes, Int8sb, Int16sb, Computed
+from commands import *
+from construct import ChecksumError
 from serial.tools.list_ports import comports
 from threading import Thread
 
@@ -16,93 +17,15 @@ logger = logging.getLogger("root")
 logger.setLevel(logging.INFO)
 logger.addHandler(chanel)
 
-# logging.basicConfig(level=logging.INFO, format="%(asctime)s;%(levelname)s;%(message)s")
 
 # test_data = b'\xee\x16\x06\x03\x02\x00\x00\x0c\x04\x15'
 # print(recieve.parse(test_data))
 
 
-def crc(ctx):
-    if ctx._building:
-        data = ctx._io.getvalue()
-        return sum(data[3:]) & 0xFF
-    #     ctx.pop('crc')
-    #     data = Struct(*ctx._subcons).build(ctx)
-    #     print(data)
-
-    if ctx._parsing:
-        data = ctx._io.getvalue()
-        return sum(data[3:-1]) & 0xFF
-    return 0xFF
-
-
-command = Enum(
-    Byte,
-    SelfInspection=0x01,
-    SingleRanging=0x02,
-    SetFirstLast=0x03,  # "Set first / last / multiple targets "
-    ContinuousRranging=0x04,
-    StopRanging=0x05,
-    SetBaudRate=0xa0,
-    SetFrequency=0xa1,  # "Set continuous ranging frequency",
-    SetMinGate=0xa2,  # "Set minimum gating distance",
-    GetMinGate=0xa3,  # "Query minimum gating distance",
-    MaxGate=0xa4,  # "Maximum gating distance",
-    GetMaxGate=0xa5,  # "Query the maximum gating distance",
-    FpgaVer=0xa6,  # "Query FPGA software version number",
-    McuVer=0xa7,  # "Query MCU software version number",
-    HWVer=0xa8,  # "Query hardware version number",
-    SN=0xa9,  # "Query Sn number",
-    Counter=0x90,  # "Total times of light respput ",
-    PowerLight=0x91,  # "Query the power on and light resp times this time"
-)
-
-
-HEADER = Const(b'\xee\x16')
-
-
-response = Struct(
-    HEADER,
-    'length' / Byte,
-    'equip' / Const(0x3, Byte),
-    'command' / command,
-    'status' / Byte,
-    '_range' / Int16sb,
-    '_dec' / Int8sb,
-    'range' / Computed(lambda ctx: ctx._range + ctx._dec / 10),
-    'crc' / Checksum(Byte, crc, lambda ctx: ctx)
-)
-
-
-ranging_cmd = Enum(
-    Bytes(4),
-    single=b'\x02\x03\x02\x05',
-    continuous=b'\x02\x03\x04\x07',
-    stop=b'\x02\x03\x05\x08',
-)
-
-ranging = Struct(HEADER, cmd=ranging_cmd)
-
-
-set_frequency = Struct(
-    HEADER,
-    length=Const(0x04, Byte),
-    cmd=Const(b'\x03\xa1'),
-    freq=Byte,  # 0x01~0x0A (1-10)
-    num=Const(0x00, Byte),  # reserve
-    crc=Checksum(Byte, crc, lambda ctx: ctx)
-)
-
-frequency = Struct(
-    HEADER,
-    ret=Const(b'\x02\x03\xa1\xa4', Bytes(4))
-)
-
-
 def parse_lrf_resp(counter, data):
     try:
 
-        resp = response.parse(data)
+        resp = ranging_response.parse(data)
         if resp.command == 0x2:
             logging.info(f' LRF resp {counter}, SING: {resp.range}m')
         elif resp.command == 0x4:
@@ -155,7 +78,7 @@ def read_lrf_req(index):
                     data += intf.read(5)
                     counter += 1
                     try:
-                        req = ranging.parse(data)
+                        req = ranging_cmd.parse(data)
                         logging.info(f' LRF req {counter}, {req.cmd}')
                     except Exception:
                         logging.info(f' LRF req {counter}, {data}')
@@ -184,7 +107,7 @@ def read_stm_req(index):
                     data += intf.read(5)
                     counter += 1
                     try:
-                        req = ranging.parse(data)
+                        req = ranging_cmd.parse(data)
                         logging.info(f' LRF req {counter}, {req.cmd}')
                     except Exception:
                         logging.info(f' LRF req {counter}, {data}')

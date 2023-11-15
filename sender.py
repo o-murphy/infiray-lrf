@@ -1,19 +1,14 @@
-import logging
 import time
-
-import serial
-from serial.tools.list_ports import comports
-
 import threading
 
 
 # Function to read data from the serial port
-from main import *
+from sniffer import *
 
 
-# print(ranging.parse(b'\xee\x16\x02\x03\x04\x08'))
+# print(ranging_cmd.parse(b'\xee\x16\x02\x03\x04\x08'))
 #
-# print(ranging.build(dict(cmd=ranging_cmd.stop)))
+# print(ranging_cmd.build(dict(cmd=ranging_cmd.stop)))
 
 
 def read_serial(intf):
@@ -49,13 +44,13 @@ def write_serial(intf):
                 message = input('Enter message to send: \n')
                 cmd = None
                 if message == 's':
-                    cmd = ranging.build({'cmd': ranging_cmd.single})
+                    cmd = ranging_cmd.build({'cmd': ranging_cmd.single})
 
                 if message == 'c':
-                    cmd = ranging.build({'cmd': ranging_cmd.continuous})
+                    cmd = ranging_cmd.build({'cmd': ranging_cmd.continuous})
 
                 if message == 'b':
-                    cmd = ranging.build({'cmd': ranging_cmd.stop})
+                    cmd = ranging_cmd.build({'cmd': ranging_cmd.stop})
 
                 if message.startswith('f'):
                     val = int(message.split()[1])
