@@ -84,6 +84,9 @@ def write_serial(intf):
                 if message == 's':
                     cmd = command_request_struct.build({'cmd': COMMAND.SingleRanging, 'params': None})
 
+                elif message == 'i':
+                    cmd = command_request_struct.build({'cmd': COMMAND.SelfInspection, 'params': None})
+
                 elif message == 'C':
                     cmd = command_request_struct.build({'cmd': COMMAND.ContinuousRanging, 'params': None})
 
@@ -182,6 +185,9 @@ Commands list:
 
 q\t - quit
 h\t - help
+
+i\t - self inspection
+
 s\t - single ranging
 cf <int:frequency> <int:timeout> 
 \t - continious ranging (frequency 1~10Hz, timout - seconds)

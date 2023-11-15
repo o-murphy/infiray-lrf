@@ -20,6 +20,9 @@ python -m infiray-lrf
 # commands list:
 q     - quit
 h     - help
+
+i     - self inspection
+
 s     - single ranging
 cf <int:frequency> <int:timeout> 
       - continious ranging (frequency 1~10Hz, timout - seconds)

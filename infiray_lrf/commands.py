@@ -60,18 +60,18 @@ TSelfStatus = BitsSwapped(BitStruct(
     temperature=Enum(Bit,
                      normal=1,
                      exception=0),
-    reserve=Bit
+    _reserve=Bit
 ))
 
 TSelfInspect = Struct(
-    status3=Byte,  # reserved
-    status2=Byte,
-    status1=TSelfStatus,
+    _reserved=Byte,  # reserved
+    echo_intensity=Byte,
+    system=TSelfStatus,
     status0=BitStruct(
         v5_power=Enum(Bit,
                       normal=1,
                       exception=0),
-        reserve=Bit[7]
+        _reserve=Bit[7]
     ),
 )
 
@@ -172,7 +172,7 @@ command_request_struct = Struct(
     cmd=COMMAND,
     params=Switch(
         this.cmd, {
-            COMMAND.SelfInspection: TSelfInspect,
+            # COMMAND.SelfInspection: TSelfInspect,
             COMMAND.SetFirstLast: TSetFirstLast,
             COMMAND.SetFrequency: TSetFrequency,
 
