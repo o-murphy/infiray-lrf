@@ -1,17 +1,48 @@
+# InfiRay-LRF
+## Command sender for the InfiRay LR2000 / LR3000 Long Range Finder
+
 ## Instalation
+
 ```shell
-git clone https://github.com/o-murphy/lr2000_lr3000
-cd lr_2000_lr_3000
-python3 -m venv venv
-. venv/bin/activate
-pip install -r requirements.txt
+pip install infiray-lrf
 ```
 
 ## Usage
-```shell
-# for sniffing lrf
-python3 -m sniffer
 
-# for sending commands
-python3 -m sender
+#### Run console
+```shell
+# enter infiray-inf UART console
+python -m infiray-lrf
+```
+
+#### Commands list
+```shell
+# commands list:
+q     - quit
+h     - help
+s     - single ranging
+cf <int:frequency> <int:timeout> 
+      - continious ranging (frequency 1~10Hz, timout - seconds)
+C     - nonstop continious ranging
+b     - stop ranging
+freq <int:frequency>
+      - set continious ranging frequency (1~10Hz)
+      
+glg   - query minimum gating distance
+ghg   - query maximum gating distance
+slg <int:distance>
+      - set minimum gating distance (10-20000m)
+shg <int:distance>
+      - set maximum gating distance (10-20000m)
+
+fpga  - query FPGA software version number
+mcu   - query MCU software version number
+hw    - query hardware version number
+sn    - query SN number
+
+total - count of times of light resput
+count - count of times of light resput since LRF power up
+
+setbaudrate <int:baudrate>
+      - set baudrate value (115200 / 57600 / 9600)
 ```

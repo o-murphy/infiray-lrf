@@ -7,6 +7,8 @@ from construct import ChecksumError
 from serial.tools.list_ports import comports
 from threading import Thread
 
+from sender import parse_lrf_resp
+
 formatter = logging.Formatter(
     "%(asctime)s;%(levelname)s;%(message)s",
     datefmt="%H:%M:%S"
@@ -22,22 +24,6 @@ logger.addHandler(chanel)
 # print(recieve.parse(test_data))
 
 
-def parse_lrf_resp(counter, data):
-    try:
-
-        resp = ranging_response.parse(data)
-        if resp.command == 0x2:
-            logging.info(f' LRF resp {counter}, SING: {resp.range}m')
-        elif resp.command == 0x4:
-            logging.info(f' LRF resp {counter}, CONT: {resp.range}m')
-        else:
-            logging.info(f' LRF resp {counter}, {int(resp.command)}: {resp.range}m')
-    except ChecksumError:
-        logging.info(f' LRF {counter}, CRC ERR: {data}')
-    except Exception as exc:
-        logging.error(exc)
-
-
 def read_lrf_resp(index):
     intf = serial.Serial()
     intf.baudrate = 115200
@@ -51,7 +37,10 @@ def read_lrf_resp(index):
             while True:
                 data = intf.read(1)
                 if data == b'\xee':
-                    data += intf.read(9)
+                    next_data = b''
+                    while next_data != b'\xee':
+                        next_data = intf.read(1)
+                        data += next_data
                     counter += 1
                     parse_lrf_resp(counter, data)
                 else:
