@@ -1,0 +1,59 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "infiray-lrf"
+
+
+authors = [
+    { name="o-murphy", email="thehelixpg@gmail.com" },
+]
+description = "Command sender for the InfiRay LR2000 / LR3000 Long Range Finder"
+readme = "README.md"
+requires-python = ">=3.9"
+keywords = [
+    "pyserial", "infiray", "iray", "lrf", "serial",
+    "long range finder", "python", "python3"
+]
+license = {file = "LICENSE"}
+classifiers = [
+    "Intended Audience :: Developers",
+    "Natural Language :: English",
+    "Programming Language :: Python",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: Implementation :: CPython",
+]
+dependencies = ['pyserial', 'construct']
+dynamic = ["version"]
+
+[project.urls]
+"Homepage" = "https://github.com/o-murphy/infiray-lrf"
+"Bug Reports" = "https://github.com/o-murphy/infiray-lrf/issues"
+#"Funding" = "https://donate.pypi.org"
+#"Say Thanks!" = ""
+"Source" = "https://github.com/o-murphy/infiray-lrf"
+
+[tool.setuptools]
+py-modules = ["infiray_lrf"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["infiray_lrf*"]
+
+[tool.setuptools.dynamic]
+version = {attr = "infiray_lrf.__version__"}
+
+[project.optional-dependencies]
+dev = ['build']
+
+[project.scripts]
+infiray-lrf = "infiray_lrf.sender:main"
