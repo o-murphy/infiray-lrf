@@ -1,6 +1,13 @@
 # InfiRay-LRF
 ## Command sender for the InfiRay LR2000 / LR3000 Long Range Finder
 
+## Table of content
+* [Instalation](#instalation)
+* [Run console](#run-console)
+* [Commands list](#commands-list)
+* [ESP32 based tester](esp32/install.md)
+
+
 ## Instalation
 
 ```shell
