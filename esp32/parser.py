@@ -1,11 +1,11 @@
 import struct
 
-from infiray_lrf.commands import command_response_struct
+# from infiray_lrf.commands import command_response_struct
 
 CMD_STR = {
     0x01: 'SelfInspection',
     0x02: 'SingleRanging',
-    0x03: 'SetFirstLast',
+    # 0x03: 'SetFirstLast',
     0x04: 'ContinuousRanging',
     0x05: 'StopRanging',
     0x06: 'RangingAbnormal',
@@ -14,10 +14,22 @@ CMD_STR = {
 STR_CMD = {
     'SelfInspection': 0x01,
     'SingleRanging': 0x02,
-    'SetFirstLast': 0x03,
+    # 'SetFirstLast': 0x03,
     'ContinuousRanging': 0x04,
     'StopRanging': 0x05,
     'RangingAbnormal': 0x06,
+}
+
+FMT = {
+    0x01: '> Insp:',
+    0x02: '> Range: {d}m\nStatus: {s}',
+    # 0x03: 'SetFirstLast',
+    0x04: '> Range: {d}m\nStatus: {s}',
+    0x05: '> StopRanging',
+    0x06: '> Ranging Error\n'
+          'FPGA {fp} laser {lo}\n'
+          'wave {w} echo {ec} t {t}\n'
+          'bias s {bs} o {bo}',
 }
 
 
@@ -26,17 +38,20 @@ def crc(data):
 
 
 def range_resp_unpack(data):
-    s, r, d = struct.unpack(">bHb", data)
+    s, r, d = struct.unpack(">bhb", data)
     return dict(s=s, d=f'{r}.{d}')
 
 
 def range_abnormal_unpack(data):
     status, *_ = struct.unpack(">xxxb", data)
-    t, bo, bs, ec, w, lo, fp, *r = "{:08b}".format(status)
+    t, bo, bs, ec, w, lo, fp, *r = [
+        '+' if i == '1' else '-' for i in "{:08b}".format(status)
+    ]
     return dict(t=t, bo=bo, bs=bs, ec=ec, w=w, lo=lo, fp=fp)
 
 
 RequestBuilder = {
+    0x01: lambda: b'',
     0x02: lambda: b'',
     0x04: lambda: b'',
 }
@@ -44,12 +59,13 @@ RequestBuilder = {
 ResponseParser = {
     0x02: range_resp_unpack,
     0x04: range_resp_unpack,
+    0x05: lambda: b'',
     0x06: range_abnormal_unpack,
 }
 
 
 # THeader = b'\xee\x16\x03\x02\x01'
-FHeader = '<cccbb'
+FHeader = '<bbbbb'
 
 
 def check_crc(data):
@@ -80,14 +96,11 @@ def request_pack(cmd, **kwargs):
     data[-1] = crc(data)
     return data
 
-
-# data = bytearray(b'\xee\x16\x06\x03\x06\x00\x00\x00\x07\x19')
-# data[-1] = crc(data)
+# data = bytearray(b'\xee\x16\x06\x03\x02\x04\x00\x00\x00\t')
 #
-# print(command_response_struct.parse(
-#     data
-# ))
-# print(data[5:-1])
-# response_unpack(
+# cmd, dd = response_unpack(
 #     data
 # )
+#
+# print(cmd, dd)
+# print(FMT[cmd].format(**dd))
