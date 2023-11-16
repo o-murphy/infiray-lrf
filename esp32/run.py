@@ -14,12 +14,6 @@ button0 = Pin(23, Pin.IN, Pin.PULL_UP)
 button1 = Pin(18, Pin.IN, Pin.PULL_UP)
 boot_button = Pin(0, Pin.IN, Pin.PULL_UP)
 
-lrf_en = Pin(2, Pin.OUT)
-lrf_en.on()
-
-# uart1 init
-uart = UART(1, baudrate=115200, tx=Pin(17), rx=Pin(16))
-
 
 # oled init
 i2c = I2C(0, scl=Pin(22), sda=Pin(21))
@@ -33,8 +27,8 @@ class Switch:
     cmd_list = tuple(parser.RequestBuilder.keys())
 
     def __init__(self):
-        self._idx = 0x01
-        self.cmd = 0x01
+        self._idx = 0
+        self.cmd = self.cmd_list[self._idx]
 
     def next(self):
         self._idx += 1
@@ -47,18 +41,23 @@ class Switch:
 
 
 class OLEDLines:
-    lines = [""] * 4
+    lines = [""] * 3
 
     def clear(self):
-        self.lines = [""] * 4
+        self.lines = [""] * 3
 
     def oled_upd(self):
         oled.fill(0)
-        oled.text(f"{switch}", 0, 0)
-        oled.text(f"{self.lines[0]}", 0, 10)
-        oled.text(f"{self.lines[1]}", 0, 20)
-        oled.text(f"{self.lines[2]}", 0, 30)
-        oled.text(f"{self.lines[3]}", 0, 40)
+        # oled.text(f"{switch}", 0, 0)
+
+        wri = Writer(oled, font10)
+        wri.set_textpos(oled, 0, 0)
+        wri.printstring(f"{switch}")
+
+        oled.text(f"{self.lines[0]}", 0, 25)
+        oled.text(f"{self.lines[1]}", 0, 35)
+        oled.text(f"{self.lines[2]}", 0, 45)
+        # oled.text(f"{self.lines[3]}", 0, 50)
         oled.show()
 
 
@@ -79,19 +78,22 @@ def read_uart():
                 try:
                     cmd, resp_data = parser.response_unpack(bytearray(data))
                     print(cmd, resp_data)
+
                     if cmd in [0x02, 0x04]:
                         wri = Writer(oled, font10)
                         wri.set_textpos(oled, 30, 10)
                         wri.printstring(f"{resp_data['d']}m")
-                    # else:
-                    #     lines = parser.FMT[cmd].format(**resp_data)
-                    #     for i, line in enumerate(lines.split('\n')):
-                    #         oled_lines.lines[i] = line
-                    #     oled_lines.oled_upd()
+                        oled.show()
+                    else:
+                        lines = parser.FMT[cmd].format(**resp_data)
+                        for i, line in enumerate(lines.split('\n')):
+                            oled_lines.lines[i] = line
+                        oled_lines.oled_upd()
 
                 except Exception as exc:
                     print(exc)
                     oled_lines.lines[1] = "> UndefErr"
+                    oled_lines.oled_upd()
 
         elif data == b'' or not data:
             pass
@@ -133,6 +135,13 @@ with open('bootmode', 'rb') as fp:
 
 
 if bootmode == b'\x01':
+
+    lrf_en = Pin(2, Pin.OUT)
+    lrf_en.on()
+
+    # uart1 init
+    uart = UART(1, baudrate=115200, tx=Pin(17), rx=Pin(16))
+
     QUIT = False
     show_hello()
     switch = Switch()
@@ -151,7 +160,7 @@ if bootmode == b'\x01':
             req = parser.request_pack(switch.cmd)
             uart.write(req)
             oled_lines.clear()
-            oled_lines.lines[0] = f"> {parser.CMD_STR[switch.cmd]}"
+            oled_lines.lines[0] = f"> {switch}"
             oled_lines.oled_upd()
 
         if b1:

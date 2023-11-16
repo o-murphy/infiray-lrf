@@ -24,10 +24,7 @@ FMT = {
     0x02: '> Range: {d}m\nStatus: {s}',
     0x04: '> Range: {d}m\nStatus: {s}',
     0x05: '> Stopped',
-    0x06: '> Ranging Error\n'
-          'FPGA{fp} laser{lo}\n'
-          'wave{w} echo{ec} t{t}\n'
-          'bias s{bs} o{bo}',
+    0x06: '> Ranging Error\nf{fp} l{lo} w{w} e{ec}\nt{t} bs{bs} bo{bo}',
 }
 
 
@@ -49,10 +46,10 @@ def range_abnormal_unpack(data):
 
 
 RequestBuilder = {
-    0x01: lambda : b'',
     0x02: lambda: b'',
     0x04: lambda: b'',
     0x05: lambda: b'',
+    # 0x01: lambda: b'',  # TODO:
 }
 
 ResponseParser = {
