@@ -25,17 +25,6 @@ oled_height = 64
 oled = ssd1306.SSD1306_I2C(oled_width, oled_height, i2c)
 
 
-QUIT = False
-
-
-oled.text("ARCHER", 40, 10)
-oled.text("InfiRay-LRF", 20, 20)
-oled.text("tester", 40, 30)
-oled.text("by o-murphy", 20, 50)
-oled.show()
-time.sleep(1)
-
-
 class Switch:
     cmd_list = tuple(parser.RequestBuilder.keys())
 
@@ -69,10 +58,6 @@ class OLEDLines:
         oled.show()
 
 
-switch = Switch()
-oled_lines = OLEDLines()
-
-
 def read_uart():
     while not QUIT:
         data = uart.read(1)
@@ -96,7 +81,7 @@ def read_uart():
 
                 except Exception as exc:
                     print(exc)
-                    oled_lines.lines[1] = ">> Error"
+                    oled_lines.lines[1] = "> UndefErr"
                 oled_lines.oled_upd()
 
         elif data == b'' or not data:
@@ -107,34 +92,63 @@ def read_uart():
         time.sleep(0.2)
 
 
-oled_lines.oled_upd()
-_thread.start_new_thread(read_uart, ())
+def show_hello():
+    oled.text("ARCHER", 40, 10)
+    oled.text("InfiRay-LRF", 20, 20)
+    oled.text("tester", 40, 30)
+    oled.text("by o-murphy", 20, 50)
+    oled.show()
+    time.sleep(2)
 
 
-while True:
+def show_repl():
+    oled.fill(0)
+    oled.text("AMPY>_", 40, 10)
+    oled.show()
 
-    b0 = not button0.value()
-    b1 = button1.value()
 
-    if b0:
-        oled.fill(0)
-        print(">> cmd", switch.cmd)
-        req = parser.request_pack(switch.cmd)
-        uart.write(req)
-        oled_lines.clear()
-        oled_lines.lines[0] = f">> {parser.CMD_STR[switch.cmd]}"
-        oled_lines.oled_upd()
+with open('bootmode', 'rb') as fp:
+    bootmode = fp.read()
 
-    if b1:
-        switch.next()
-        oled_lines.oled_upd()
 
-    if boot_button.value() == 0:
-        QUIT = True
-        oled.fill(0)
-        oled.text("REPL>_", 40, 10)
-        oled.show()
-        time.sleep(0.1)
-        break
+if bootmode == b'\x01':
+    QUIT = False
+    show_hello()
+    switch = Switch()
+    oled_lines = OLEDLines()
+    oled_lines.oled_upd()
+    _thread.start_new_thread(read_uart, ())
 
-    time.sleep(0.2)
+    while True:
+
+        b0 = not button0.value()
+        b1 = button1.value()
+
+        if b0:
+            oled.fill(0)
+            print(">> cmd", switch.cmd)
+            req = parser.request_pack(switch.cmd)
+            uart.write(req)
+            oled_lines.clear()
+            oled_lines.lines[0] = f"> {parser.CMD_STR[switch.cmd]}"
+            oled_lines.oled_upd()
+
+        if b1:
+            switch.next()
+            oled_lines.oled_upd()
+
+        if boot_button.value() == 0:
+            QUIT = True
+
+            show_repl()
+            with open('bootmode', 'wb') as fp:
+                fp.write(b'\x00')
+            time.sleep(0.1)
+            # reset()
+
+        time.sleep(0.2)
+
+else:
+    show_repl()
+    with open('bootmode', 'wb') as fp:
+        fp.write(b'\x01')

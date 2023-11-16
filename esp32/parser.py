@@ -25,11 +25,11 @@ FMT = {
     0x02: '> Range: {d}m\nStatus: {s}',
     # 0x03: 'SetFirstLast',
     0x04: '> Range: {d}m\nStatus: {s}',
-    0x05: '> Ranging Stopped',
+    0x05: '> Stopped',
     0x06: '> Ranging Error\n'
-          'FPGA {fp} laser {lo}\n'
-          'wave {w} echo {ec} t {t}\n'
-          'bias s {bs} o {bo}',
+          'FPGA{fp} laser{lo}\n'
+          'wave{w} echo{ec} t{t}\n'
+          'bias s{bs} o{bo}',
 }
 
 
