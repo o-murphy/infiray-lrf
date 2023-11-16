@@ -14,6 +14,10 @@ esptool --chip esp32 --port /dev/ttyUSB0 --baud 460800 write_flash -z 0x1000 esp
 ```shell
 ampy --port /dev/ttyUSB0 --baud 115200 put boot.py
 ampy --port /dev/ttyUSB0 --baud 115200 put ssd1306.py
+ampy --port /dev/ttyUSB0 --baud 115200 put writer.py
+#ampy --port /dev/ttyUSB0 --baud 115200 put freesans20.py
+ampy --port /dev/ttyUSB0 --baud 115200 put courier20.py
+ampy --port /dev/ttyUSB0 --baud 115200 put font10.py
 ampy --port /dev/ttyUSB0 --baud 115200 put parser.py
 ampy --port /dev/ttyUSB0 --baud 115200 put bootmode
 ampy --port /dev/ttyUSB0 --baud 115200 put run.py
@@ -24,3 +28,7 @@ ampy --port /dev/ttyUSB0 --baud 115200 put main.py
 * Run controller
 * After logo press the BOOT button
 * When the display show "AMPY" run the ampy command from terminal
+
+#### Usefull links
+* [oled driver](https://github.com/micropython/micropython-lib/blob/master/micropython/drivers/display/ssd1306/ssd1306.py)
+* [font writer](https://github.com/peterhinch/micropython-font-to-py/tree/master/writer)

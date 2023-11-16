@@ -3,27 +3,25 @@ import struct
 # from infiray_lrf.commands import command_response_struct
 
 CMD_STR = {
-    0x01: 'SelfInspection',
-    0x02: 'SingleRanging',
-    # 0x03: 'SetFirstLast',
-    0x04: 'ContinuousRanging',
-    0x05: 'StopRanging',
-    0x06: 'RangingAbnormal',
+    0x01: 'Self Inspection',
+    0x02: 'Single Ranging',
+    0x04: 'Scanning',
+    0x05: 'Stop Scanning',
+    0x06: 'Ranging Error',
 }
 
-STR_CMD = {
-    'SelfInspection': 0x01,
-    'SingleRanging': 0x02,
-    # 'SetFirstLast': 0x03,
-    'ContinuousRanging': 0x04,
-    'StopRanging': 0x05,
-    'RangingAbnormal': 0x06,
-}
+# STR_CMD = {
+#     'SelfInspection': 0x01,
+#     'SingleRanging': 0x02,
+#     # 'SetFirstLast': 0x03,
+#     'ContinuousRanging': 0x04,
+#     'StopRanging': 0x05,
+#     'RangingAbnormal': 0x06,
+# }
 
 FMT = {
     0x01: '> Insp:',
     0x02: '> Range: {d}m\nStatus: {s}',
-    # 0x03: 'SetFirstLast',
     0x04: '> Range: {d}m\nStatus: {s}',
     0x05: '> Stopped',
     0x06: '> Ranging Error\n'

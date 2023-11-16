@@ -3,6 +3,10 @@ from machine import UART, I2C, Pin
 import ssd1306
 import _thread
 import parser
+# import freesans20
+import courier20
+import font10
+from writer import Writer
 
 
 # buttons init
@@ -75,14 +79,19 @@ def read_uart():
                 try:
                     cmd, resp_data = parser.response_unpack(bytearray(data))
                     print(cmd, resp_data)
-                    lines = parser.FMT[cmd].format(**resp_data)
-                    for i, line in enumerate(lines.split('\n')):
-                        oled_lines.lines[i] = line
+                    if cmd in [0x02, 0x04]:
+                        wri = Writer(oled, font10)
+                        wri.set_textpos(oled, 30, 10)
+                        wri.printstring(f"{resp_data['d']}m")
+                    # else:
+                    #     lines = parser.FMT[cmd].format(**resp_data)
+                    #     for i, line in enumerate(lines.split('\n')):
+                    #         oled_lines.lines[i] = line
+                    #     oled_lines.oled_upd()
 
                 except Exception as exc:
                     print(exc)
                     oled_lines.lines[1] = "> UndefErr"
-                oled_lines.oled_upd()
 
         elif data == b'' or not data:
             pass
@@ -93,17 +102,29 @@ def read_uart():
 
 
 def show_hello():
-    oled.text("ARCHER", 40, 10)
-    oled.text("InfiRay-LRF", 20, 20)
-    oled.text("tester", 40, 30)
-    oled.text("by o-murphy", 20, 50)
+    wri = Writer(oled, courier20)
+    wri.set_textpos(oled, 0, 22)
+    wri.printstring('ARCHER')
+
+    wri1 = Writer(oled, font10)
+    wri1.set_textpos(oled, 28, 20)
+    wri1.printstring("InfiRay-LRF")
+
+    # oled.text("InfiRay-LRF", 20, 30)
+    # oled.text("tester", 40, 40)
+    oled.text("by o-murphy", 18, 50)
     oled.show()
     time.sleep(2)
 
 
 def show_repl():
     oled.fill(0)
-    oled.text("AMPY>_", 40, 10)
+
+    wri = Writer(oled, courier20)
+    wri.set_textpos(oled, 20, 22)
+    wri.printstring("AMPY>_")
+
+    # oled.text("AMPY>_", 40, 10)
     oled.show()
 
 
