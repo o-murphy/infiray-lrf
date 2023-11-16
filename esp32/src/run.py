@@ -1,12 +1,11 @@
 import time
 from machine import UART, I2C, Pin
-import ssd1306
+from src.ssd1306 import SSD1306_I2C
 import _thread
 import parser
 # import freesans20
-import courier20
-import font10
-from writer import Writer
+from src.fonts import courier20, font10
+from src.writer import Writer
 
 
 # buttons init
@@ -20,7 +19,7 @@ i2c = I2C(0, scl=Pin(22), sda=Pin(21))
 
 oled_width = 128
 oled_height = 64
-oled = ssd1306.SSD1306_I2C(oled_width, oled_height, i2c)
+oled = SSD1306_I2C(oled_width, oled_height, i2c)
 
 
 class Switch:
@@ -130,7 +129,7 @@ def show_repl():
     oled.show()
 
 
-with open('bootmode', 'rb') as fp:
+with open('../bootmode', 'rb') as fp:
     bootmode = fp.read()
 
 
@@ -171,7 +170,7 @@ if bootmode == b'\x01':
             QUIT = True
 
             show_repl()
-            with open('bootmode', 'wb') as fp:
+            with open('../bootmode', 'wb') as fp:
                 fp.write(b'\x00')
             time.sleep(0.1)
             # reset()
@@ -180,5 +179,5 @@ if bootmode == b'\x01':
 
 else:
     show_repl()
-    with open('bootmode', 'wb') as fp:
+    with open('../bootmode', 'wb') as fp:
         fp.write(b'\x01')

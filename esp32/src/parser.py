@@ -1,7 +1,5 @@
 import struct
 
-# from infiray_lrf.commands import command_response_struct
-
 CMD_STR = {
     0x01: 'Self Inspection',
     0x02: 'Single Ranging',
@@ -9,15 +7,6 @@ CMD_STR = {
     0x05: 'Stop Scanning',
     0x06: 'Ranging Error',
 }
-
-# STR_CMD = {
-#     'SelfInspection': 0x01,
-#     'SingleRanging': 0x02,
-#     # 'SetFirstLast': 0x03,
-#     'ContinuousRanging': 0x04,
-#     'StopRanging': 0x05,
-#     'RangingAbnormal': 0x06,
-# }
 
 FMT = {
     0x01: '> Insp:',
@@ -60,17 +49,12 @@ ResponseParser = {
 }
 
 
-# THeader = b'\xee\x16\x03\x02\x01'
-FHeader = '<bbbbb'
-
-
 def check_crc(data):
     return crc(data) == data[-1]
 
 
 def response_unpack(data):
-
-    hh, hl, ln, q, cmd = struct.unpack(FHeader, data[:5])
+    hh, hl, ln, q, cmd = struct.unpack('<bbbbb', data[:5])
     if not check_crc(data):
         raise ValueError("Wrong CRC")
     if not cmd in ResponseParser:
@@ -91,12 +75,3 @@ def request_pack(cmd, **kwargs):
     data[2] = len(data) - 4
     data[-1] = crc(data)
     return data
-
-# data = bytearray(b'\xee\x16\x06\x03\x02\x04\x00\x00\x00\t')
-#
-# cmd, dd = response_unpack(
-#     data
-# )
-#
-# print(cmd, dd)
-# print(FMT[cmd].format(**dd))
