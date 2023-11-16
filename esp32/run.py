@@ -8,6 +8,7 @@ import parser
 # buttons init
 button0 = Pin(23, Pin.IN, Pin.PULL_UP)
 button1 = Pin(18, Pin.IN, Pin.PULL_UP)
+boot_button = Pin(0, Pin.IN, Pin.PULL_UP)
 
 lrf_en = Pin(2, Pin.OUT)
 lrf_en.on()
@@ -27,6 +28,14 @@ oled = ssd1306.SSD1306_I2C(oled_width, oled_height, i2c)
 QUIT = False
 
 
+oled.text("ARCHER", 40, 10)
+oled.text("InfiRay-LRF", 20, 20)
+oled.text("tester", 40, 30)
+oled.text("by o-murphy", 20, 50)
+oled.show()
+time.sleep(1)
+
+
 class Switch:
     cmd_list = tuple(parser.RequestBuilder.keys())
 
@@ -41,7 +50,7 @@ class Switch:
         self.cmd = self.cmd_list[self._idx]
 
     def __str__(self):
-        return parser.CMD_STR[self._idx]
+        return parser.CMD_STR[self.cmd]
 
 
 class OLEDLines:
@@ -68,7 +77,7 @@ def read_uart():
     while not QUIT:
         data = uart.read(1)
         if data == b'\xee':
-            time.sleep(0.2)
+            time.sleep(0.1)
             _d = uart.read(2)
             if _d:
                 len_eq = bytearray(_d)
@@ -120,8 +129,12 @@ while True:
         switch.next()
         oled_lines.oled_upd()
 
-    time.sleep(0.1)
+    if boot_button.value() == 0:
+        QUIT = True
+        oled.fill(0)
+        oled.text("REPL>_", 40, 10)
+        oled.show()
+        time.sleep(0.1)
+        break
 
-
-#  b'\xee\x16\x06\x03\x02\x00\x00\r\x07\x19'
-#  b'\xee\x16\x06\x03\x02\x00\x00\r\x01\x13'
+    time.sleep(0.2)

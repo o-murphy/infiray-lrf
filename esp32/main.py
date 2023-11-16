@@ -1,7 +1,8 @@
-
 try:
     import run
-except Exception as exc:
+except (Exception, KeyboardInterrupt) as exc:
     print("FATAL: ", exc)
-    import os
-    os.remove('run.py')
+    is_rem_run = input("Remove broken run.py?")
+    if is_rem_run == 'yes':
+        import os
+        os.remove('run.py')

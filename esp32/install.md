@@ -5,5 +5,6 @@ pip install adafruit-ampy --upgrade
 ampy --port COM26 --baud 115200 put .\esp32\boot.py
 ampy --port COM26 --baud 115200 put .\esp32\ssd1306.py
 ampy --port COM26 --baud 115200 put .\esp32\parser.py
+ampy --port COM26 --baud 115200 put .\esp32\run.py
 ampy --port COM26 --baud 115200 put .\esp32\main.py
 ```
