@@ -41,7 +41,7 @@ def read_uart():
                         on_result(f"{resp_data['d']}m")
 
                     elif cmd == 0x06:
-                        on_result(f"Err:0x{resp_data['status']:02X}")
+                        on_result(f"Err:x{resp_data['status']:02X}")
                         ERR_COUNT += 1
                         on_status(f"{resp_data['mask']} err: {ERR_COUNT}")
 
@@ -96,7 +96,7 @@ def on_result(result):
 
 def on_status(status):
     draw_bottom_rect()
-    text(status, 0, oled_height-13, font=font6)
+    oled.text(status, 0, oled_height-13)
     oled.show()
 
 

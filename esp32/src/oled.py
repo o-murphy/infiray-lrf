@@ -24,8 +24,6 @@ def hline(y, x0=0, x1=oled_width, col=1):
 def text(txt, x, y, inv=False, font=None):
     if font:
         wri.font = font
-    # col = 0 if not inv else 1
-    # fill_rect(y0=y, y1=wri.font.height(), col=col)
     wri.set_textpos(oled, y, x)
     wri.printstring(txt, inv)
 
