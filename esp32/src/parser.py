@@ -31,7 +31,7 @@ def range_abnormal_unpack(data):
     t, bo, bs, ec, w, lo, fp, *r = [
         '+' if i == '1' else '-' for i in "{:08b}".format(status)
     ]
-    return dict(t=t, bo=bo, bs=bs, ec=ec, w=w, lo=lo, fp=fp)
+    return dict(t=t, bo=bo, bs=bs, ec=ec, w=w, lo=lo, fp=fp, status=status)
 
 
 RequestBuilder = {
@@ -46,6 +46,8 @@ ResponseParser = {
     0x04: range_resp_unpack,
     0x05: lambda *args: {},
     0x06: range_abnormal_unpack,
+
+    0xa1: lambda *args: {}  # TODO
 }
 
 
