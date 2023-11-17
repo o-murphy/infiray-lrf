@@ -28,10 +28,14 @@ def range_resp_unpack(data):
 
 def range_abnormal_unpack(data):
     status, *_ = struct.unpack(">xxxB", data)
-    t, bo, bs, ec, w, lo, fp, *r = [
-        '+' if i == '1' else '-' for i in "{:08b}".format(status)
+    # t, bo, bs, ec, w, lo, fp, *r = [
+    #     '-' if i == '1' else 'x' for i in "{:08b}".format(status)
+    # ]
+    mask = [
+        '-' if i == '1' else 'x' for i in "{:08b}".format(status)
     ]
-    return dict(t=t, bo=bo, bs=bs, ec=ec, w=w, lo=lo, fp=fp, status=status)
+    # return dict(t=t, bo=bo, bs=bs, ec=ec, w=w, lo=lo, fp=fp, status=status)
+    return dict(mask=''.join(mask), status=status)
 
 
 RequestBuilder = {
