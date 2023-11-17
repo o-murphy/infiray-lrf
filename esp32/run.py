@@ -43,7 +43,7 @@ def read_uart():
                     elif cmd == 0x06:
                         on_result(f"Err:0x{resp_data['status']:02X}")
                         ERR_COUNT += 1
-                        on_status(f"{resp_data.mask} err: {ERR_COUNT}")
+                        on_status(f"{resp_data['mask']} err: {ERR_COUNT}")
 
                     elif cmd == 0x05:
                         pass
@@ -124,7 +124,7 @@ def set_lrf_frequency():
     time.sleep(0.25)
 
 
-bootmode()
+bootmode(oled)
 lrf_en.on()
 show_hello()
 
