@@ -2,7 +2,7 @@ import time
 from machine import UART, I2C, Pin
 from src.ssd1306 import SSD1306_I2C
 import _thread
-import parser
+from src import parser
 # import freesans20
 from src.fonts import courier20, font10
 from src.writer import Writer
@@ -80,9 +80,12 @@ def read_uart():
 
                     if cmd in [0x02, 0x04]:
                         wri = Writer(oled, font10)
-                        wri.set_textpos(oled, 30, 10)
+                        wri.set_textpos(oled, 40, 10)
                         wri.printstring(f"{resp_data['d']}m")
                         oled.show()
+                        oled_lines.lines[1] = ''
+                        oled_lines.lines[2] = ''
+                        # oled_lines.oled_upd()
                     else:
                         lines = parser.FMT[cmd].format(**resp_data)
                         for i, line in enumerate(lines.split('\n')):
@@ -129,7 +132,7 @@ def show_repl():
     oled.show()
 
 
-with open('../bootmode', 'rb') as fp:
+with open('bootmode', 'rb') as fp:
     bootmode = fp.read()
 
 
@@ -170,7 +173,7 @@ if bootmode == b'\x01':
             QUIT = True
 
             show_repl()
-            with open('../bootmode', 'wb') as fp:
+            with open('bootmode', 'wb') as fp:
                 fp.write(b'\x00')
             time.sleep(0.1)
             # reset()
@@ -179,5 +182,5 @@ if bootmode == b'\x01':
 
 else:
     show_repl()
-    with open('../bootmode', 'wb') as fp:
+    with open('bootmode', 'wb') as fp:
         fp.write(b'\x01')
