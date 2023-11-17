@@ -165,6 +165,14 @@ class Spinner:
         return self.states[self.idx]
 
 
+def set_lrf_frequency():
+    uart.write(b'\xee\x16\x04\x03\xa1\n\x00\xae')  # frequency 10
+    # uart.write(b'\xee\x16\x04\x03\xa1\x05\x00\xa9')  # frequency 5
+    # uart.write(b'\xee\x16\x04\x03\xa1\x02\x00\xa6')  # frequency 2
+    # uart.write(b'\xee\x16\x04\x03\xa1\x01\x00\xa5')  # frequency 1
+    time.sleep(0.25)
+
+
 bootmode()
 # led.value(0)
 oled.fill(0)
@@ -192,10 +200,7 @@ oled.show()
 
 _thread.start_new_thread(read_uart, ())
 
-uart.write(b'\xee\x16\x04\x03\xa1\n\x00\xae')  # frequency 10
-# uart.write(b'\xee\x16\x04\x03\xa1\x05\x00\xa9')  # frequency 5
-# uart.write(b'\xee\x16\x04\x03\xa1\x02\x00\xa6')  # frequency 2
-# uart.write(b'\xee\x16\x04\x03\xa1\x01\x00\xa5')  # frequency 1
+set_lrf_frequency()
 
 while True:
     c, s = 0, 0.5
@@ -215,17 +220,21 @@ while True:
     if c > 0:
         if lrf_en.value() == 0:
             lrf_en.on()
+            time.sleep(0.25)
+            set_lrf_frequency()
             on_result(f"LRF:ON\t\t")
+            on_state(">_ stopped\t")
         else:
             lrf_en.off()
             on_result(f"LRF:OFF\t\t")
+            on_state(">_ disabled")
         oled.show()
 
     if b0_prev != button0.value():
         if button0.value():
             b0_prev = button0.value()
             # print('0', b0_prev)
-            on_state(">_ ranging ")
+            on_state(">_ ranging\t")
 
             uart.write(parser.request_pack(0x02))
 
@@ -234,7 +243,7 @@ while True:
                 time.sleep(0.1)
                 oled.show()
             spin(range_spinner, -1)
-            on_state(">_ stopped ")
+            on_state(">_ stopped\t")
         else:
             b0_prev = button0.value()
 
@@ -247,11 +256,11 @@ while True:
 
             uart.write(parser.request_pack(0x04))
 
-            on_state(">_ scanning ")
+            on_state(">_ scanning")
         else:
             uart.write(parser.request_pack(0x05))
 
-            on_state(">_ stopped ")
+            on_state(">_ stopped\t")
             spin(scan_spinner, -1)
 
     if not b1_val:

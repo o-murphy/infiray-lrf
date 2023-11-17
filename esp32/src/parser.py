@@ -22,12 +22,12 @@ def crc(data):
 
 
 def range_resp_unpack(data):
-    s, r, d = struct.unpack(">bhb", data)
+    s, r, d = struct.unpack(">BhB", data)
     return dict(s=s, d=f'{r}.{d}')
 
 
 def range_abnormal_unpack(data):
-    status, *_ = struct.unpack(">xxxb", data)
+    status, *_ = struct.unpack(">xxxB", data)
     t, bo, bs, ec, w, lo, fp, *r = [
         '+' if i == '1' else '-' for i in "{:08b}".format(status)
     ]
@@ -56,7 +56,7 @@ def check_crc(data):
 
 
 def response_unpack(data):
-    hh, hl, ln, q, cmd = struct.unpack('<bbbbb', data[:5])
+    hh, hl, ln, q, cmd = struct.unpack('<BBBBB', data[:5])
     if not check_crc(data):
         raise ValueError("Wrong CRC")
     if not cmd in ResponseParser:
