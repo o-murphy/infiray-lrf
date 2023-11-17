@@ -1,7 +1,5 @@
 import struct
 
-# from infiray_lrf.commands import command_response_struct
-
 CMD_STR = {
     0x01: 'Self Inspection',
     0x02: 'Single Ranging',
@@ -9,15 +7,6 @@ CMD_STR = {
     0x05: 'Stop Scanning',
     0x06: 'Ranging Error',
 }
-
-# STR_CMD = {
-#     'SelfInspection': 0x01,
-#     'SingleRanging': 0x02,
-#     # 'SetFirstLast': 0x03,
-#     'ContinuousRanging': 0x04,
-#     'StopRanging': 0x05,
-#     'RangingAbnormal': 0x06,
-# }
 
 FMT = {
     0x01: '> Insp:',
@@ -33,16 +22,16 @@ def crc(data):
 
 
 def range_resp_unpack(data):
-    s, r, d = struct.unpack(">bhb", data)
+    s, r, d = struct.unpack(">BhB", data)
     return dict(s=s, d=f'{r}.{d}')
 
 
 def range_abnormal_unpack(data):
-    status, *_ = struct.unpack(">xxxb", data)
+    status, *_ = struct.unpack(">xxxB", data)
     t, bo, bs, ec, w, lo, fp, *r = [
         '+' if i == '1' else '-' for i in "{:08b}".format(status)
     ]
-    return dict(t=t, bo=bo, bs=bs, ec=ec, w=w, lo=lo, fp=fp)
+    return dict(t=t, bo=bo, bs=bs, ec=ec, w=w, lo=lo, fp=fp, status=status)
 
 
 RequestBuilder = {
@@ -57,11 +46,9 @@ ResponseParser = {
     0x04: range_resp_unpack,
     0x05: lambda *args: {},
     0x06: range_abnormal_unpack,
+
+    0xa1: lambda *args: {}  # TODO
 }
-
-
-# THeader = b'\xee\x16\x03\x02\x01'
-FHeader = '<bbbbb'
 
 
 def check_crc(data):
@@ -69,8 +56,7 @@ def check_crc(data):
 
 
 def response_unpack(data):
-
-    hh, hl, ln, q, cmd = struct.unpack(FHeader, data[:5])
+    hh, hl, ln, q, cmd = struct.unpack('<BBBBB', data[:5])
     if not check_crc(data):
         raise ValueError("Wrong CRC")
     if not cmd in ResponseParser:
@@ -91,12 +77,3 @@ def request_pack(cmd, **kwargs):
     data[2] = len(data) - 4
     data[-1] = crc(data)
     return data
-
-# data = bytearray(b'\xee\x16\x06\x03\x02\x04\x00\x00\x00\t')
-#
-# cmd, dd = response_unpack(
-#     data
-# )
-#
-# print(cmd, dd)
-# print(FMT[cmd].format(**dd))
