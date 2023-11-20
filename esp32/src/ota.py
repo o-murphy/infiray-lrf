@@ -1,25 +1,24 @@
 # OTA
 
 try:
-  import usocket as socket
+    import usocket as socket
 except:
-  import socket
+    import socket
 
 try:
-  import urequests as requests
+    import urequests as requests
 except:
-  import requests
-import os
-import sys
-from time import sleep
+    import requests
+
 import network
 
 import machine
 import time
+import json
 
 
 # __version__ = '0.0.1'
-upd_url = "https://raw.githubusercontent.com/o-murphy/infiray-lrf/ota/esp32/run.py"
+upd_url = "https://raw.githubusercontent.com/o-murphy/infiray-lrf/ota/esp32/"
 
 ssid = ''
 password = ''
@@ -29,7 +28,27 @@ station.active(True)
 station.connect(ssid, password)
 
 
-def update(oled=None):
+def get_ota_list(oled):
+    try:
+        otas = []
+        response = requests.get(upd_url + 'ota.json')
+        if response.text.find("{") > 0:
+            otas_li = json.loads(response.text)
+
+            for item in otas_li:
+                response1 = requests.get(upd_url + item)
+                otas.append((item, response1.text))
+
+            return otas
+        else:
+            oled.text('Error', 0, 20)
+            oled.text('update skipped', 0, 30)
+            oled.show()
+    except Exception:
+        return []
+
+
+def update(oled):
     oled.fill(0)
 
     connect_timeout = 5
@@ -53,23 +72,19 @@ def update(oled=None):
 
     oled.text("Download...", 0, 10)
     oled.show()
-    response = requests.get(upd_url)
-    if response.ok:
-        resp_text = response.text
-        with open("ota.py", "w") as fp:
-            fp.write(resp_text)
+
+    ota_list = get_ota_list(oled)
+    if len(ota_list) <= 0:
+        oled.text('Error', 0, 20)
+        oled.text('update skipped', 0, 30)
+        oled.show()
+        return
+
+    for item, data in ota_list:
+        with open(item, "w") as fp:
+            fp.write(data)
         oled.text('OK', 0, 20)
         oled.text('rebooting', 0, 30)
         oled.show()
         time.sleep(2)
         machine.reset()
-    else:
-        oled.text('Error', 0, 20)
-        oled.text('update skipped', 0, 30)
-        oled.show()
-
-
-
-
-
-
