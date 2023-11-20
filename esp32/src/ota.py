@@ -32,7 +32,7 @@ def get_ota_list(oled):
     try:
         otas = []
         response = requests.get(upd_url + 'ota.json')
-        if response.text.find("{") > 0:
+        if response.text.find("[") >= 0:
             otas_li = json.loads(response.text)
 
             for item in otas_li:
