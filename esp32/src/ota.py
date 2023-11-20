@@ -30,9 +30,12 @@ try:
 except Exception:
     pass
 
+print(ssid, password)
+
 station = network.WLAN(network.STA_IF)
 station.active(False)
 station.active(True)
+print(station.scan())
 station.connect(ssid, password)
 
 
@@ -78,7 +81,7 @@ def update():
         oled.text('update skipped', 0, 20)
         oled.show()
         time.sleep(2)
-        return
+        machine.reset()
 
     oled.fill(0)
 
@@ -93,7 +96,8 @@ def update():
         oled.text('Error', 0, 20)
         oled.text('update skipped', 0, 30)
         oled.show()
-        return
+        time.sleep(2)
+        machine.reset()
 
     for item, data in ota_list:
         with open(item, "w") as fp:
