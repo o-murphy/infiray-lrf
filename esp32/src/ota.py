@@ -15,6 +15,7 @@ import network
 import machine
 import time
 import json
+from src.oled import oled
 
 
 # __version__ = '0.0.1'
@@ -35,7 +36,7 @@ station.active(True)
 station.connect(ssid, password)
 
 
-def get_ota_list(oled):
+def get_ota_list():
     try:
         otas = []
         print(upd_url + 'ota.json')
@@ -62,7 +63,7 @@ def get_ota_list(oled):
         return []
 
 
-def update(oled):
+def update():
     oled.fill(0)
 
     connect_timeout = 5
@@ -102,3 +103,6 @@ def update(oled):
         oled.show()
         time.sleep(2)
         machine.reset()
+
+update()
+

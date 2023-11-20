@@ -5,16 +5,22 @@ import _thread
 from src import parser
 from src.fonts import courier20, freesans20, font6, font10
 from src.oled import *
-from src.bootmode import *
+import time
+# from src.bootmode import *
 
+
+boot_button = Pin(0, Pin.IN, Pin.PULL_UP)
+# buttons init
+button0 = Pin(23, Pin.IN, Pin.PULL_UP)
+button1 = Pin(18, Pin.IN, Pin.PULL_UP)
 
 lrf_en = Pin(2, Pin.OUT)
 uart = UART(1, baudrate=115200, tx=Pin(17), rx=Pin(16))
 
 
-def exit_to_repl():
-    lrf_en.off()
-    bootmode_repl(oled)
+# def exit_to_repl():
+#     lrf_en.off()
+#     bootmode_repl(oled)
 
 
 def read_uart():
@@ -123,7 +129,7 @@ def set_lrf_frequency():
     time.sleep(0.25)
 
 
-bootmode(oled)
+# bootmode(oled)
 lrf_en.on()
 show_hello()
 
@@ -158,8 +164,8 @@ while True:
         on_state(">_ mode")
         if c >= 2:
             QUIT = True
-            disable_autoboot()
-            exit_to_repl()
+            # disable_autoboot()
+            # exit_to_repl()
         c += s
         time.sleep(s)
 

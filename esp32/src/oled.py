@@ -12,7 +12,7 @@ i2c = I2C(0, scl=Pin(22), sda=Pin(21))
 oled_width = 128
 oled_height = 64
 oled = SSD1306_I2C(oled_width, oled_height, i2c)
-
+oled.rotate(0)
 
 
 wri = Writer(oled, font10)
