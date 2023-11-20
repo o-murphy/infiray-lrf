@@ -5,9 +5,6 @@ from src.fonts import courier20, freesans20, font6, font10
 from src.oled import *
 from src.bootmode import *
 
-# buttons init
-button0 = Pin(23, Pin.IN, Pin.PULL_UP)
-button1 = Pin(18, Pin.IN, Pin.PULL_UP)
 
 lrf_en = Pin(2, Pin.OUT)
 uart = UART(1, baudrate=115200, tx=Pin(17), rx=Pin(16))

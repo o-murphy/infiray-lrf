@@ -3,6 +3,9 @@ from machine import Pin
 import sys, time
 
 boot_button = Pin(0, Pin.IN, Pin.PULL_UP)
+# buttons init
+button0 = Pin(23, Pin.IN, Pin.PULL_UP)
+button1 = Pin(18, Pin.IN, Pin.PULL_UP)
 
 
 def enable_autoboot():
@@ -43,6 +46,10 @@ def bootmode(oled=None):
 
         c, s = 0, 0.5
         while True:
+            if not button0.value():
+                from src.ota import update
+                update(oled)
+                return
             if not boot_button.value():
                 while not boot_button.value():
                     if c >= 2:
