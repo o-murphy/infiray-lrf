@@ -42,12 +42,14 @@ def get_ota_list(oled):
         response = requests.get(upd_url + 'ota.json')
         if response.text.find("[") >= 0:
             otas_li = json.loads(response.text)
-
+            print(otas_li)
             for item in otas_li:
+                print(upd_url + item)
                 response1 = requests.get(upd_url + item)
                 if response1.text.find("OTA") >= 0:
                     otas.append((item, response1.text))
                 else:
+                    print(response1.text[:10])
                     return []
 
             return otas
@@ -55,7 +57,8 @@ def get_ota_list(oled):
             oled.text('Error', 0, 20)
             oled.text('update skipped', 0, 30)
             oled.show()
-    except Exception:
+    except Exception as exc:
+        print(exc)
         return []
 
 
