@@ -38,13 +38,17 @@ station.connect(ssid, password)
 def get_ota_list(oled):
     try:
         otas = []
+        print(upd_url + 'ota.json')
         response = requests.get(upd_url + 'ota.json')
         if response.text.find("[") >= 0:
             otas_li = json.loads(response.text)
 
             for item in otas_li:
                 response1 = requests.get(upd_url + item)
-                otas.append((item, response1.text))
+                if response1.text.find("OTA") >= 0:
+                    otas.append((item, response1.text))
+                else:
+                    return []
 
             return otas
         else:
