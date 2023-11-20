@@ -20,11 +20,14 @@ import json
 # __version__ = '0.0.1'
 upd_url = "https://raw.githubusercontent.com/o-murphy/infiray-lrf/ota/esp32/"
 
-ssid = ''
+ssid = 'Wokwi-GUEST'
 password = ''
 
-with open('wlan.cfg', 'r') as fp:
-    ssid, password, *_ = fp.read().split('\n')
+try:
+    with open('wlan.cfg', 'r') as fp:
+        ssid, password, *_ = fp.read().split('\n')
+except Exception:
+    pass
 
 station = network.WLAN(network.STA_IF)
 station.active(False)
