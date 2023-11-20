@@ -47,9 +47,16 @@ def bootmode(oled=None):
         c, s = 0, 0.5
         while True:
             if not button0.value():
-                from src.ota import update
-                update(oled)
-                return
+                try:
+                    from src.ota import update
+                    update(oled)
+                    return
+                except Exception as err:
+                    print(err)
+                    oled.fill(0)
+                    oled.text("Update error", 0, 0)
+                    time.sleep(2)
+                    return
             if not boot_button.value():
                 while not boot_button.value():
                     if c >= 2:

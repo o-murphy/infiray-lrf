@@ -22,6 +22,10 @@ upd_url = "https://raw.githubusercontent.com/o-murphy/infiray-lrf/ota/esp32/"
 
 ssid = ''
 password = ''
+
+with open('wlan.cfg', 'r') as fp:
+    ssid, password, *_ = fp.read().split('\n')
+
 station = network.WLAN(network.STA_IF)
 station.active(False)
 station.active(True)
