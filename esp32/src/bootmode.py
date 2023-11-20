@@ -1,3 +1,5 @@
+# OTA
+
 """check boot mode"""
 from machine import Pin
 import sys, time
