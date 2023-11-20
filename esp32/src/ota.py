@@ -91,7 +91,7 @@ def update():
     oled.text("Download...", 0, 10)
     oled.show()
 
-    ota_list = get_ota_list(oled)
+    ota_list = get_ota_list()
     if len(ota_list) <= 0:
         oled.text('Error', 0, 20)
         oled.text('update skipped', 0, 30)
