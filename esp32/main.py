@@ -1,8 +1,10 @@
+# OTA
+
 import sys
 
 from machine import Pin
 from src.oled import oled
-from os import listdir
+import os
 import time
 
 
@@ -13,6 +15,18 @@ button1 = Pin(18, Pin.IN, Pin.PULL_UP)
 
 b0_prev = button0.value()
 b1_prev = button1.value()
+
+
+def is_directory(path):
+    try:
+        # Get file/directory information
+        stat_info = os.stat(path)
+
+        # Check if it is a directory
+        return stat_info[0] & 0o170000 == 0o040000  # S_IFDIR
+    except OSError as e:
+        # Handle the case where the path doesn't exist or there is an error
+        return False
 
 
 class BootMenu:
@@ -33,10 +47,12 @@ class BootMenu:
         self.total_lines = 6
 
     def get_items(self):
-        files = listdir()
+        files = os.listdir()
         menu = []
         for file in files:
             if file.endswith(".py"):
+                menu.append(file)
+            else:
                 menu.append(file)
         menu.append('REPL')
         menu.append('UPDATE')
@@ -81,6 +97,11 @@ class BootMenu:
 
         elif filename == "UPDATE":
             exec(open('src/ota.py', 'r').read())
+
+        elif is_directory(filename):
+            os.chdir(filename)
+            items = self.get_items()
+            self.show_menu(items)
 
         else:
 
