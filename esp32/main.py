@@ -98,6 +98,7 @@ class BootMenu:
         elif filename == "WebREPL":
             from src import wrepl
             assert wrepl
+            sys.exit()
 
         elif is_directory(filename):
             os.chdir(filename)

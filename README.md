@@ -5,7 +5,7 @@
 * [Instalation](#instalation)
 * [Run console](#run-console)
 * [Commands list](#commands-list)
-* [ESP32 based tester](esp32/install.md)
+* [ESP32 based tester/emulator](esp32/install.md)
 
 
 ## Instalation
