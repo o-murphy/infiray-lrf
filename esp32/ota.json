@@ -1,1 +1,1 @@
-["src/bootmode.py"]
+["src/parser.py", "wrepl.py", "src/oled.py"]
