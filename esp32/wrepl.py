@@ -5,12 +5,12 @@ import webrepl
 
 # Set your desired WebREPL name and password
 webrepl_cfg = {
-    "ssid": "your_wifi_ssid",
-    "password": "your_wifi_password",
+    "ssid": "infiray-lrf",
+    "password": "infiray1",
     "bind-addr": "0.0.0.0",
     "port": 8266,
     "auth-mode": "password",
-    "web_repl_pass": "your_webrepl_password",
+    "web_repl_pass": "infiray1",
 }
 
 # Connect to WiFi
