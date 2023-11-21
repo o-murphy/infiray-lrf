@@ -52,10 +52,10 @@ class BootMenu:
         for file in files:
             if file.endswith(".py"):
                 menu.append(file)
-            else:
-                menu.append(file)
+            # else:
+            #     menu.append(file)
+        menu.append('WebREPL')
         menu.append('REPL')
-        menu.append('UPDATE')
 
         return (menu)
 
@@ -95,8 +95,9 @@ class BootMenu:
             oled.show()
             sys.exit()
 
-        elif filename == "UPDATE":
-            exec(open('src/ota.py', 'r').read())
+        elif filename == "WebREPL":
+            from src import wrepl
+            assert wrepl
 
         elif is_directory(filename):
             os.chdir(filename)
@@ -124,7 +125,7 @@ class BootMenu:
         self.show_menu(self.file_list)
 
         while True:
-            b0_val = button0.value()
+            b0_val = not button0.value()
             b1_val = not button1.value()
 
             if b0_prev != button0.value():
