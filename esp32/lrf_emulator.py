@@ -14,8 +14,6 @@ button1 = Pin(18, Pin.IN, Pin.PULL_UP)
 b0_prev = button0.value()
 b1_prev = button1.value()
 
-
-lrf_en = Pin(2, Pin.OUT)
 uart = UART(1, baudrate=115200, tx=Pin(17), rx=Pin(16))
 
 
