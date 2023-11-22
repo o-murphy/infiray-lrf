@@ -1,26 +1,20 @@
-# OTA
-
 from machine import UART, Pin
 import _thread
-from src import parser
-from src.fonts import courier20, freesans20, font6, font10
+from src.parser import *
 from src.oled import *
 import time
-# from src.bootmode import *
 
 
-boot_button = Pin(0, Pin.IN, Pin.PULL_UP)
 # buttons init
+boot_button = Pin(0, Pin.IN, Pin.PULL_UP)
 button0 = Pin(23, Pin.IN, Pin.PULL_UP)
 button1 = Pin(18, Pin.IN, Pin.PULL_UP)
 
+b0_prev = button0.value()
+b1_prev = button1.value()
+
 lrf_en = Pin(2, Pin.OUT)
 uart = UART(1, baudrate=115200, tx=Pin(17), rx=Pin(16))
-
-
-# def exit_to_repl():
-#     lrf_en.off()
-#     bootmode_repl(oled)
 
 
 def read_uart():
@@ -39,7 +33,7 @@ def read_uart():
                 # print('resp', data)  # uncomment on need
 
                 try:
-                    cmd, resp_data = parser.response_unpack(bytearray(data))
+                    cmd, resp_data = response_unpack(bytearray(data))
                     # print(cmd, resp_data)  # uncomment on need
 
                     if cmd in [0x02, 0x04]:
@@ -70,57 +64,6 @@ def read_uart():
         time.sleep(0.02)
 
 
-def show_hello():
-    oled.fill(0)
-    text('ARCHER', 22, 0, font=courier20)
-    text("InfiRay-LRF", 20, 28, font=font10)
-    oled.text("by o-murphy", 18, 50)
-    oled.show()
-    time.sleep(2)
-
-
-def spin(spinner, idx=None):
-    draw_spin_rect()
-    if idx:
-        spinner.idx = idx
-    text(f"{spinner.next()}", 0, (oled_height - freesans20.height()) // 2, False, freesans20)
-    oled.show()
-
-
-def on_state(state):
-    draw_top_rect()
-    text(state, 0, 0, font=font6)
-    oled.show()
-
-
-def on_result(result):
-    draw_range_rect()
-    text(result, 50, (oled_height - freesans20.height()) // 2, False, freesans20)
-    oled.show()
-
-
-def on_status(status):
-    draw_bottom_rect()
-    oled.text(status, 0, oled_height-13)
-    oled.show()
-
-
-class Spinner:
-    # states = "\/-"
-    _states = ["===", ">==", ">>=", ">>>", "=>>", "==>",
-               "===", "==<", "=<<", "<<<", "<<=", "<=="]
-
-    def __init__(self, idx=0, states=None):
-        self.idx = idx
-        self.states = states if states else self._states
-
-    def next(self):
-        self.idx += 1
-        if self.idx == len(self.states):
-            self.idx = 0
-        return self.states[self.idx]
-
-
 def set_lrf_frequency():
     uart.write(b'\xee\x16\x04\x03\xa1\n\x00\xae')  # frequency 10
     # uart.write(b'\xee\x16\x04\x03\xa1\x05\x00\xa9')  # frequency 5
@@ -136,19 +79,11 @@ show_hello()
 # init globalvars
 QUIT = False
 ERR_COUNT = 0
-b1_prev = button1.value()
-b0_prev = button0.value()
 scan_spinner = Spinner()
 range_spinner = Spinner(states=["===", ">=<", "=x=", ])
 
 # init gui
-oled.fill(0)
-oled.rect(40, 14, 88, 36, 1)
-oled.hline(0, font6.height(), oled_width, 1)
-oled.hline(0, oled_height-font6.height()-1, oled_width, 1)
-draw_range_rect()
-draw_top_rect()
-draw_bottom_rect()
+init_gui()
 spin(range_spinner, -1)
 on_state(">_ stopped ")
 
@@ -164,8 +99,7 @@ while True:
         on_state(">_ mode")
         if c >= 2:
             QUIT = True
-            # disable_autoboot()
-            # exit_to_repl()
+
         c += s
         time.sleep(s)
 
@@ -187,7 +121,7 @@ while True:
 
             on_state(">_ ranging")
 
-            uart.write(parser.request_pack(0x02))
+            uart.write(request_pack(0x02))
 
             for i in range(len(range_spinner.states)):
                 spin(range_spinner)
@@ -205,11 +139,11 @@ while True:
 
         if not b1_val:
 
-            uart.write(parser.request_pack(0x04))
+            uart.write(request_pack(0x04))
 
             on_state(">_ scanning")
         else:
-            uart.write(parser.request_pack(0x05))
+            uart.write(request_pack(0x05))
 
             on_state(">_ stopped")
             spin(scan_spinner, -1)

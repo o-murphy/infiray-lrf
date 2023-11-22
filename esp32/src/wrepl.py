@@ -1,6 +1,3 @@
-# OTA
-import sys
-
 from src.oled import oled
 
 import network

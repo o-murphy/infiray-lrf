@@ -1,5 +1,3 @@
-# OTA
-
 import sys
 
 from machine import Pin
@@ -8,8 +6,8 @@ import os
 import time
 
 
-boot_button = Pin(0, Pin.IN, Pin.PULL_UP)
 # buttons init
+boot_button = Pin(0, Pin.IN, Pin.PULL_UP)
 button0 = Pin(23, Pin.IN, Pin.PULL_UP)
 button1 = Pin(18, Pin.IN, Pin.PULL_UP)
 
@@ -148,11 +146,7 @@ try:
         boot_menu = BootMenu()
         boot_menu.run()
     else:
-        import run
+        import lrf_tester
 
 except (Exception, KeyboardInterrupt) as exc:
-    print("FATAL: ", exc)
-    # is_rem_run = input("Remove broken run.py?")
-    # if is_rem_run == 'yes':
-    #     import os
-    #     os.remove('run.py')
+    print("FATAL EXCEPTION: ", exc)

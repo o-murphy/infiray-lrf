@@ -8,14 +8,6 @@ CMD_STR = {
     0x06: 'Ranging Error',
 }
 
-FMT = {
-    0x01: '> Insp:',
-    0x02: '> Range: {d}m\nStatus: {s}',
-    0x04: '> Range: {d}m\nStatus: {s}',
-    0x05: '> Stopped',
-    0x06: '> Ranging Error\nf{fp} l{lo} w{w} e{ec}\nt{t} bs{bs} bo{bo}',
-}
-
 
 def crc(data):
     return sum(data[3:-1]) & 0xFF
@@ -36,6 +28,20 @@ def range_abnormal_unpack(data):
     ]
     # return dict(t=t, bo=bo, bs=bs, ec=ec, w=w, lo=lo, fp=fp, status=status)
     return dict(mask=''.join(mask[:7]), status=status)
+
+
+def range_resp_pack(status, range: float):
+    r, d = int(range // 1), int(range % 1 * 10)
+    return struct.pack(">BhB", status, r, d)
+
+
+def continuous_resp_pack(status, range: float):
+    r, d = int(range // 1), int(range % 1 * 10)
+    return struct.pack(">BhB", status, r, d)
+
+
+def range_abnormal_pack(*args, **kwargs):
+    return b''
 
 
 RequestBuilder = {
