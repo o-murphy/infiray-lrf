@@ -7,7 +7,17 @@ from datetime import datetime
 
 from construct import *
 
-HEADER = Const(b'\xee\x16')
+
+def format_sn(ctx):
+    date = datetime(ctx._my.y + 2020, ctx._my.m, 1).strftime("%Y%m")
+    num = f"{ctx._Num:04.0f}"
+    return f"{date}{num}"
+
+
+def crc(ctx):
+    data = ctx._io.getvalue()
+    return sum(data[3:-1]) & 0xFF
+
 
 COMMAND = Enum(
     Byte,
@@ -36,6 +46,19 @@ COMMAND = Enum(
     SN=0xa9,  # "Query Sn number"
     TotalCount=0x90,  # "Total times of light resp put "
     PowerCount=0x91,  # "Query the power on and light resp times this time"
+)
+
+HEADER = Struct(
+    Const(b'\xee\x16'),
+    _length=Default(Byte, 0x00),
+    _equip=Const(0x03, Byte),
+    cmd=COMMAND,
+)
+
+FOOTER = Struct(
+    _size=Tell,
+    _length_p=Pointer(HEADER.sizeof(), Rebuild(Byte, this._size - 3)),
+    # _crc=Rebuild(Checksum(Byte, crc, lambda ctx: ctx), 0)
 )
 
 TSelfStatus = BitsSwapped(BitStruct(
@@ -137,13 +160,6 @@ THWVer = Struct(
     LDVS=Computed(lambda ctx: f"{ctx._LDVS.major}.{ctx._LDVS.minor}")
 )
 
-
-def format_sn(ctx):
-    date = datetime(ctx._my.y + 2020, ctx._my.m, 1).strftime("%Y%m")
-    num = f"{ctx._Num:04.0f}"
-    return f"{date}{num}"
-
-
 _get_sn = Struct(
     _my=BitStruct(
         m=BitsInteger(4),
@@ -154,25 +170,10 @@ _get_sn = Struct(
     SN=Computed(format_sn),
 )
 
-
-def crc(ctx):
-    if ctx._building:
-        data = ctx._io.getvalue()
-        return sum(data[3:]) & 0xFF
-    if ctx._parsing:
-        data = ctx._io.getvalue()
-        return sum(data[3:-1]) & 0xFF
-    return 0xFF
-
-
 command_request_struct = Struct(
-    HEADER,
-    _length=Default(Byte, 0x00),
-    _equip=Const(0x03, Byte),
-    cmd=COMMAND,
+    *HEADER.subcons,
     params=Switch(
         this.cmd, {
-            # COMMAND.SelfInspection: TSelfInspect,
             COMMAND.SetFirstLast: TSetFirstLast,
             COMMAND.SetFrequency: TSetFrequency,
 
@@ -183,16 +184,12 @@ command_request_struct = Struct(
         },
         default=Const(b'')
     ),
-    _size=Tell,
-    _length_p=Pointer(HEADER.sizeof(), Rebuild(Byte, this._size - 3)),
+    *FOOTER.subcons,
     _crc=Rebuild(Checksum(Byte, crc, lambda ctx: ctx), 0)
 )
 
 command_response_struct = Struct(
-    HEADER,
-    _length=Default(Byte, 0x00),
-    _equip=Const(0x03, Byte),
-    cmd=COMMAND,
+    *HEADER.subcons,
     params=Switch(
         this.cmd, {
             COMMAND.SelfInspection: TSelfInspect,
@@ -218,7 +215,6 @@ command_response_struct = Struct(
         },
         default=Const(b'')
     ),
-    _size=Tell,
-    _length_p=Pointer(HEADER.sizeof(), Rebuild(Byte, this._size - 3)),
+    *FOOTER.subcons,
     _crc=Rebuild(Checksum(Byte, crc, lambda ctx: ctx), 0)
 )

@@ -69,9 +69,8 @@ show_hello()
 
 # init gui
 init_gui()
-
 scan_spinner = Spinner()
-range_spinner = Spinner(states=["===", ">=<", "=x=", ])
+range_spinner = Spinner(states=["===", ">=<", "=x="])
 spin(range_spinner, -1)
 on_state(f"No CMD")
 on_result(f"None")

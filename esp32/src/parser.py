@@ -47,21 +47,30 @@ def range_abnormal_pack(*args, **kwargs):
     return b''
 
 
+def set_frequency_pack(value):
+    print(struct.pack("<h", value))
+    return struct.pack("<h", value)
+
+
+def set_lrf_frequency(uart, value):
+    uart.write(message_pack(0xa1, value=value))
+    time.sleep(0.25)
+
+
 MessageBuilder = {
     0x02: lambda: b'',
     0x04: lambda: b'',
     0x05: lambda: b'',
-    # 0x01: lambda: b'',  # TODO:
+    0xa1: set_frequency_pack
 }
 
 
 MessageParser = {
     0x02: range_resp_unpack,
     0x04: range_resp_unpack,
-    0x05: lambda *args: {},
+    0x05: lambda *args, **kwargs: {},
     0x06: range_abnormal_unpack,
-
-    0xa1: lambda *args: {}  # TODO
+    0xa1: lambda *args, **kwargs: {}  # TODO
 }
 
 
@@ -90,6 +99,7 @@ def message_pack(cmd, **kwargs):
 
 
 def read_uart(uart, on_message=None):
+    print('uart', on_message)
     data = uart.read(1)
     if data == b'\xee':
         time.sleep(0.01)
@@ -100,6 +110,6 @@ def read_uart(uart, on_message=None):
             data += len_eq
             data += uart.read(expected_length)
 
-            if callable(on_message):
-                on_message(data)
+            # if callable(on_message):
+            on_message(data)
     time.sleep(0.02)
