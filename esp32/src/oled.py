@@ -1,18 +1,16 @@
-from machine import I2C, Pin
-from src.ssd1306 import SSD1306_I2C
-from src.writer import Writer
-from src.fonts import font10, courier20, font6, freesans20
-import framebuf
 import time
 
+import framebuf
+from src.fonts import font10, courier20, font6, freesans20
+from src.pinout import *
+from src.ssd1306 import SSD1306_I2C
+from src.writer import Writer
 
 # oled init
-i2c = I2C(0, scl=Pin(22), sda=Pin(21))
 oled_width = 128
 oled_height = 64
 oled = SSD1306_I2C(oled_width, oled_height, i2c)
 oled.rotate(0)
-
 
 wri = Writer(oled, font10)
 
@@ -70,7 +68,7 @@ def draw_top_rect():
 def draw_bottom_rect():
     fb = framebuf.FrameBuffer(bytearray(128 * 14 * 2), 128, 14, framebuf.MONO_VLSB)
     fb.fill(0)
-    oled.blit(fb, 0, oled_height-14)
+    oled.blit(fb, 0, oled_height - 14)
 
 
 def draw_spin_rect():
@@ -101,7 +99,7 @@ def on_result(result):
 
 def on_status(status):
     draw_bottom_rect()
-    oled.text(status, 0, oled_height-13)
+    oled.text(status, 0, oled_height - 13)
     oled.show()
 
 
@@ -109,7 +107,7 @@ def init_gui():
     oled.fill(0)
     oled.rect(40, 14, 88, 36, 1)
     oled.hline(0, font6.height(), oled_width, 1)
-    oled.hline(0, oled_height-font6.height()-1, oled_width, 1)
+    oled.hline(0, oled_height - font6.height() - 1, oled_width, 1)
     draw_range_rect()
     draw_top_rect()
     draw_bottom_rect()

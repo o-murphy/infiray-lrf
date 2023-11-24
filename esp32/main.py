@@ -1,15 +1,10 @@
 import sys
 
-from machine import Pin
+from src.pinout import *
 from src.oled import oled
 import os
 import time
 
-
-# buttons init
-boot_button = Pin(0, Pin.IN, Pin.PULL_UP)
-button0 = Pin(23, Pin.IN, Pin.PULL_UP)
-button1 = Pin(18, Pin.IN, Pin.PULL_UP)
 
 b0_prev = button0.value()
 b1_prev = button1.value()
