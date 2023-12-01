@@ -1,5 +1,9 @@
 # InfiRay-LRF
 ## Command sender for the InfiRay LR2000 / LR3000 Long Range Finder
+[![PyPI Version](https://img.shields.io/pypi/v/infiray-lrf?label=PyPI&logo=pypi)
+![Python Version](https://img.shields.io/pypi/pyversions/infiray-lrf?logo=python)
+![PyPI Format](https://img.shields.io/pypi/wheel/infiray-lrf?label=wheel)
+![PyPI Implementation](https://img.shields.io/pypi/implementation/infiray-lrf)](https://pypi.org/project/infiray-lrf/)
 
 ## Table of content
 * [Instalation](#instalation)
