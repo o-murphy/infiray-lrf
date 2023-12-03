@@ -23,7 +23,7 @@ def crc(data):
 
 def range_resp_unpack(data):
     s, r, d = struct.unpack(">BhB", data)
-    return dict(s=s, d=f'{r}.{d}')
+    return dict(s=s, d=f'{r}.{d}', r=r)
 
 
 def range_abnormal_unpack(data):
@@ -81,3 +81,4 @@ def request_pack(cmd, **kwargs):
     data[2] = len(data) - 4
     data[-1] = crc(data)
     return data
+
