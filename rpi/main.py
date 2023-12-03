@@ -1,45 +1,66 @@
+
 try:
-    from machine import UART, ADC, Pin
-    from parser import response_unpack
-except ImportError as err:
-    print("fake machine")
+    import uasyncio as asyncio
+except ImportError:
+    import asyncio
+
+try:
     from rpi.fake_machine import UART, ADC, Pin
     from rpi.parser import response_unpack
 
-import time
-import _thread
+except ImportError:
+    from machine import UART, ADC, Pin
+    from parser import response_unpack
 
+import time
+import random
 
 uart_dev = UART(1, baudrate=115200, tx=Pin(4), rx=Pin(5))
 uart_lrf = UART(0, baudrate=115200, tx=Pin(0), rx=Pin(1))
-
 
 led = Pin('LED', Pin.OUT)
 led.on()
 
 pot = ADC(Pin(26))
 
-prev_pot = 0
-time_init = time.time()
+time_init = time.time_ns()
 
-ctr = 0
+
+def run_time():
+    return int((time.time_ns() - time_init) * 1e-6) / 1000
+
+
 def log(msg):
-    global ctr
-    print(ctr)
-    ctr += 1
+    print(f"{run_time()}\t{msg}")
     with open('log.txt', 'a') as fp:
         fp.write(f"{run_time()}\t{msg}\n")
 
 
-def read_uart_dev():
+async def upd_acp_value():
+    prev_pot = 0
     while True:
+        pot_value = (pot.read_u16() * 3.3) / 65535 * 1.52
+        if abs(pot_value - prev_pot) >= 0.5:
+            log(f"lr5v {pot_value}")
+            prev_pot = pot_value
+        await asyncio.sleep(0.01)
 
+
+async def blink(period, duration):
+    for i in range(duration):
+        led.off()
+        await asyncio.sleep(period)
+        led.on()
+        await asyncio.sleep(period)
+
+
+# Coroutine for reading from uart0 and writing to uart1
+async def uart0_to_uart1():
+    while True:
         try:
-            upd_acp_value()
             data = uart_dev.read(1)
-
             if data == b'\xee':
-                time.sleep(0.01)
+                await asyncio.sleep(0.02)
                 data += uart_dev.read(2)
                 if data:
                     expected_length = data[2] + 1
@@ -47,78 +68,45 @@ def read_uart_dev():
                     log(f"dev > dongle {data}")
                     uart_lrf.write(data)
                     log(f"dongle > lr {data}")
-
-            elif data == b'' or not data:
-                pass
-            else:
-                pass
-
-            time.sleep(0.02)
         except Exception as err:
-            # print(err)
-            led.off()
-            time.sleep(1)
-            led.on()
+            log(err)
+            await blink(1, 1)
+        await asyncio.sleep(0.02)
 
 
-def read_uart_lrf():
+# Coroutine for reading from uart1 and writing to uart0
+async def uart1_to_uart0():
     while True:
         try:
-
             data = uart_lrf.read(1)
-
             if data == b'\xee':
-                time.sleep(0.02)
+                await asyncio.sleep(0.02)
                 data += uart_lrf.read(2)
                 if data:
                     expected_length = data[2] + 1
                     data += uart_lrf.read(expected_length)
                     log(f"lr > dongle {data}")
-
                     cmd, result = response_unpack(data)
                     if cmd in (0x02, 0x04) and result['s'] != 0x06:
                         _out = (str(result['r']) + '\n').encode('ascii')
                         uart_dev.write(_out)
                         log(f"dongle > dev {_out}")
-
-            elif data == b'' or not data:
-                pass
-            else:
-                pass
-
-            time.sleep(0.02)
         except Exception as err:
-            # print(err)
-            led.off()
-            time.sleep(0.5)
-            led.on()
-            time.sleep(0.5)
-            led.off()
-            time.sleep(0.5)
-            led.on()
+            log(err)
+            await blink(1, 1)
+        await asyncio.sleep(0.02)
 
 
-def acp_value():
-    pot_value = pot.read_u16()
-    return (pot_value * 3.3) / 65535
+# Run both coroutines
+async def main():
+    task1 = asyncio.create_task(uart0_to_uart1())
+    task2 = asyncio.create_task(uart1_to_uart0())
+    task3 = asyncio.create_task(upd_acp_value())
+
+    await asyncio.gather(task1, task2, task3)
 
 
-def upd_acp_value():
-    global prev_pot
-    pot_value = acp_value()
-    if pot_value - prev_pot >= 0.01:
-        # print(f"{run_time()} {pot_value}")
-        log(f" lr5v {pot_value}")
-        prev_pot = pot_value
+# Run the event loop
+asyncio.run(main())
 
-
-def run_time():
-    return int((time.time() - time_init) * 100)
-
-
-_thread.start_new_thread(read_uart_lrf, ())
-
-# while True:
-#    time.sleep(1)
-read_uart_dev()
 
