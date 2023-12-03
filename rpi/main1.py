@@ -1,3 +1,4 @@
+
 try:
     import uasyncio as asyncio
 except ImportError:
@@ -11,9 +12,8 @@ except ImportError:
     from machine import UART, ADC, Pin
     from parser import response_unpack
 
-
 import time
-
+import random
 
 uart_dev = UART(1, baudrate=115200, tx=Pin(4), rx=Pin(5))
 uart_lrf = UART(0, baudrate=115200, tx=Pin(0), rx=Pin(1))
@@ -23,11 +23,11 @@ led.on()
 
 pot = ADC(Pin(26))
 
-time_init = time.time()
+time_init = time.time_ns()
 
 
 def run_time():
-    return int((time.time() - time_init) * 100) / 100
+    return int((time.time_ns() - time_init) * 1e-6) / 1000
 
 
 def log(msg):
@@ -39,11 +39,11 @@ def log(msg):
 async def upd_acp_value():
     prev_pot = 0
     while True:
-        pot_value = (pot.read_u16() * 3.3) / 65535
-        if pot_value - prev_pot >= 0.01:
+        pot_value = (pot.read_u16() * 3.3) / 65535 * 1.52
+        if abs(pot_value - prev_pot) >= 0.5:
             log(f"lr5v {pot_value}")
             prev_pot = pot_value
-        await asyncio.sleep(0.02)
+        await asyncio.sleep(0.01)
 
 
 async def blink(period, duration):
@@ -68,7 +68,8 @@ async def uart0_to_uart1():
                     log(f"dev > dongle {data}")
                     uart_lrf.write(data)
                     log(f"dongle > lr {data}")
-        except Exception:
+        except Exception as err:
+            log(err)
             await blink(1, 1)
         await asyncio.sleep(0.02)
 
@@ -90,7 +91,8 @@ async def uart1_to_uart0():
                         _out = (str(result['r']) + '\n').encode('ascii')
                         uart_dev.write(_out)
                         log(f"dongle > dev {_out}")
-        except Exception:
+        except Exception as err:
+            log(err)
             await blink(1, 1)
         await asyncio.sleep(0.02)
 
@@ -103,5 +105,8 @@ async def main():
 
     await asyncio.gather(task1, task2, task3)
 
+
 # Run the event loop
 asyncio.run(main())
+
+
