@@ -222,10 +222,3 @@ command_response_struct = Struct(
     _length_p=Pointer(HEADER.sizeof(), Rebuild(Byte, this._size - 3)),
     _crc=Rebuild(Checksum(Byte, crc, lambda ctx: ctx), 0)
 )
-
-
-# print(command_response_struct.build({'cmd': 0x02, 'params': {
-#     'status': 0, '_range': 19, "_dec": 0
-# }}))
-
-print(command_request_struct.parse(bytearray([ 0xEE, 0x16, 0x02, 0x03, 0x02, 0x05])))

@@ -2,6 +2,16 @@ import random
 import time
 
 
+_FREQ = 125000000
+
+
+def freq(value: int = None):
+    global _FREQ
+    if isinstance(value, int):
+        _FREQ = value
+    return _FREQ
+
+
 class Pin:
     IN = ...
     OUT = ...

@@ -5,15 +5,17 @@ except ImportError:
     import asyncio
 
 try:
-    from rpi.fake_machine import UART, ADC, Pin
+    from rpi.fake_machine import UART, ADC, Pin, freq
     from rpi.parser import response_unpack
 
 except ImportError:
-    from machine import UART, ADC, Pin
+    from machine import UART, ADC, Pin, freq
     from parser import response_unpack
 
 import time
-import random
+
+
+# freq(48000000)
 
 uart_dev = UART(1, baudrate=115200, tx=Pin(4), rx=Pin(5))
 uart_lrf = UART(0, baudrate=115200, tx=Pin(0), rx=Pin(1))
@@ -62,6 +64,7 @@ async def uart0_to_uart1():
             if data == b'\xee':
                 await asyncio.sleep(0.02)
                 data += uart_dev.read(2)
+                await asyncio.sleep(0.02)
                 if data:
                     expected_length = data[2] + 1
                     data += uart_dev.read(expected_length)
@@ -86,11 +89,15 @@ async def uart1_to_uart0():
                     expected_length = data[2] + 1
                     data += uart_lrf.read(expected_length)
                     log(f"lr > dongle {data}")
-                    cmd, result = response_unpack(data)
-                    if cmd in (0x02, 0x04) and result['s'] != 0x06:
-                        _out = (str(result['r']) + '\n').encode('ascii')
-                        uart_dev.write(_out)
-                        log(f"dongle > dev {_out}")
+
+                    # cmd, result = response_unpack(data)
+                    # if cmd in (0x02, 0x04) and result['s'] != 0x06:
+                    #     _out = (str(result['r']) + '\n').encode('ascii')
+                    #     uart_dev.write(_out)
+                    #     log(f"dongle > dev {_out}")
+
+                    uart_dev.write(data)
+                    log(f"dongle > dev {data}")
         except Exception as err:
             log(err)
             await blink(1, 1)
@@ -108,5 +115,4 @@ async def main():
 
 # Run the event loop
 asyncio.run(main())
-
 
