@@ -56,49 +56,20 @@ async def blink(period, duration):
         await asyncio.sleep(period)
 
 
-# Coroutine for reading from uart0 and writing to uart1
-async def uart0_to_uart1():
+async def uart2uart(uart0, uart1):
     while True:
         try:
-            data = uart_dev.read(1)
+            data = uart0.read(1)
             if data == b'\xee':
                 await asyncio.sleep(0.02)
-                data += uart_dev.read(2)
+                data += uart0.read(2)
                 await asyncio.sleep(0.02)
                 if data:
                     expected_length = data[2] + 1
                     data += uart_dev.read(expected_length)
-                    log(f"dev > dongle {data}")
-                    uart_lrf.write(data)
-                    log(f"dongle > lr {data}")
-        except Exception as err:
-            log(err)
-            await blink(1, 1)
-        await asyncio.sleep(0.02)
-
-
-# Coroutine for reading from uart1 and writing to uart0
-async def uart1_to_uart0():
-    while True:
-        try:
-            data = uart_lrf.read(1)
-            if data == b'\xee':
-                await asyncio.sleep(0.02)
-                data += uart_lrf.read(2)
-                if data:
-                    expected_length = data[2] + 1
-                    data += uart_lrf.read(expected_length)
-                    log(f"lr > dongle {data}")
-
-                    # cmd, result = response_unpack(data)
-                    # if cmd in (0x02, 0x04) and result['s'] != 0x06:
-                    #     _out = (str(result['r']) + '\n').encode('ascii')
-                    #     uart_dev.write(_out)
-                    #     log(f"dongle > dev {_out}")
-
-                    uart_dev.write(data)
-                    log(f"dongle > dev {data}")
-        except Exception as err:
+                    data = process_data(data)
+                    uart1.write(data)
+        except Exception as e:
             log(err)
             await blink(1, 1)
         await asyncio.sleep(0.02)
@@ -106,8 +77,8 @@ async def uart1_to_uart0():
 
 # Run both coroutines
 async def main():
-    task1 = asyncio.create_task(uart0_to_uart1())
-    task2 = asyncio.create_task(uart1_to_uart0())
+    task1 = asyncio.create_task(uart2uart(uart0=uart_lrf, uart1=uart_dev))
+    task2 = asyncio.create_task(uart2uart(uart0=uart_dev, uart1=uart_lrf))
     task3 = asyncio.create_task(upd_acp_value())
 
     await asyncio.gather(task1, task2, task3)
