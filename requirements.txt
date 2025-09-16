@@ -1,2 +1,2 @@
 pyserial~=3.5
-construct~=2.10.69
+construct~=2.10.70
