@@ -1,7 +1,6 @@
+import random
 import struct
 import time
-import random
-
 
 CMD_STR = {
     0x01: 'Self Inspection',
@@ -55,6 +54,7 @@ ResponseParser = {
 def check_crc(data):
     return crc(data) == data[-1]
 
+
 def response_unpack(data):
     hh, hl, ln, q, cmd = struct.unpack('<BBBBB', data[:5])
     if not check_crc(data):
@@ -78,6 +78,7 @@ def request_pack(cmd, **kwargs):
     data[-1] = crc(data)
     return data
 
+
 def random_range():
     return random.randrange(0, 30000, 1) / 10
 
@@ -92,4 +93,3 @@ if __name__ == "__main__":
         print(d)
 
         time.sleep(0.2)
-
