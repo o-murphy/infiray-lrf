@@ -7,17 +7,21 @@ build-backend = "setuptools.build_meta"
 name = "infiray-lrf"
 
 
-authors = [
-    { name="o-murphy", email="thehelixpg@gmail.com" },
-]
+authors = [{ name = "o-murphy", email = "thehelixpg@gmail.com" }]
 description = "Command sender for the InfiRay LR2000 / LR3000 Long Range Finder"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 keywords = [
-    "pyserial", "infiray", "iray", "lrf", "serial",
-    "long range finder", "python", "python3"
+    "pyserial",
+    "infiray",
+    "iray",
+    "lrf",
+    "serial",
+    "long range finder",
+    "python",
+    "python3",
 ]
-license = {file = "LICENSE"}
+license = { file = "LICENSE" }
 classifiers = [
     "Intended Audience :: Developers",
     "Natural Language :: English",
@@ -32,7 +36,7 @@ classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python :: Implementation :: CPython",
 ]
-dependencies = ['pyserial', 'construct']
+dependencies = ['pyserial>=3.5', 'construct>=2.10.70']
 dynamic = ["version"]
 
 [project.urls]
@@ -50,7 +54,7 @@ where = ["."]
 include = ["infiray_lrf*"]
 
 [tool.setuptools.dynamic]
-version = {attr = "infiray_lrf.__version__"}
+version = { attr = "infiray_lrf.__version__" }
 
 [project.optional-dependencies]
 dev = ['build']

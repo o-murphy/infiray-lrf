@@ -1,0 +1,2 @@
+[console_scripts]
+infiray-lrf = infiray_lrf.sender:main
